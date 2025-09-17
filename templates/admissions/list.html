@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}All Applications - Mini ERP System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">
+        <i class="bi bi-list-ul text-primary"></i> Student Applications
+    </h2>
+    <a href="{% url 'admissions:apply' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> New Application
+    </a>
+</div>
+
+{% if admissions %}
+    <div class="card shadow">
+        <div class="card-header bg-light">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="mb-0">Total Applications: {{ admissions|length }}</h6>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted">Click on Student ID to view details</small>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Course</th>
+                            <th>Status</th>
+                            <th>Applied Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for admission in admissions %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'admissions:detail' admission.student_id %}" 
+                                   class="text-decoration-none fw-bold">
+                                    {{ admission.student_id }}
+                                </a>
+                            </td>
+                            <td>{{ admission.first_name }} {{ admission.last_name }}</td>
+                            <td>{{ admission.email }}</td>
+                            <td>{{ admission.course }}</td>
+                            <td>
+                                {% if admission.status == 'pending' %}
+                                    <span class="badge bg-warning">
+                                        <i class="bi bi-clock"></i> Pending
+                                    </span>
+                                {% elif admission.status == 'approved' %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Approved
+                                    </span>
+                                {% elif admission.status == 'rejected' %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-x-circle"></i> Rejected
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ admission.status|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if admission.created_at %}
+                                    {{ admission.created_at|slice:":10" }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Summary Statistics -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card bg-warning bg-opacity-10 border-warning">
+                <div class="card-body text-center">
+                    <i class="bi bi-clock-history display-6 text-warning"></i>
+                    <h4 class="mt-2">
+                        {% with admissions|length as total %}
+                            {% with pending_count=0 %}
+                                {% for admission in admissions %}
+                                    {% if admission.status == 'pending' %}
+                                        {% with pending_count=pending_count|add:1 %}{% endwith %}
+                                    {% endif %}
+                                {% endfor %}
+                                Pending: {{ pending_count }}
+                            {% endwith %}
+                        {% endwith %}
+                    </h4>
+                    <p class="text-muted">Awaiting Review</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success bg-opacity-10 border-success">
+                <div class="card-body text-center">
+                    <i class="bi bi-check-circle display-6 text-success"></i>
+                    <h4 class="mt-2">
+                        {% with approved_count=0 %}
+                            {% for admission in admissions %}
+                                {% if admission.status == 'approved' %}
+                                    {% with approved_count=approved_count|add:1 %}{% endwith %}
+                                {% endif %}
+                            {% endfor %}
+                            Approved: {{ approved_count }}
+                        {% endwith %}
+                    </h4>
+                    <p class="text-muted">Accepted Students</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger bg-opacity-10 border-danger">
+                <div class="card-body text-center">
+                    <i class="bi bi-x-circle display-6 text-danger"></i>
+                    <h4 class="mt-2">
+                        {% with rejected_count=0 %}
+                            {% for admission in admissions %}
+                                {% if admission.status == 'rejected' %}
+                                    {% with rejected_count=rejected_count|add:1 %}{% endwith %}
+                                {% endif %}
+                            {% endfor %}
+                            Rejected: {{ rejected_count }}
+                        {% endwith %}
+                    </h4>
+                    <p class="text-muted">Not Selected</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+{% else %}
+    <!-- Empty State -->
+    <div class="text-center py-5">
+        <i class="bi bi-inbox display-1 text-muted"></i>
+        <h4 class="mt-3 text-muted">No Applications Found</h4>
+        <p class="text-muted">There are currently no admission applications in the system.</p>
+        <a href="{% url 'admissions:apply' %}" class="btn btn-primary btn-lg mt-3">
+            <i class="bi bi-plus-circle"></i> Submit First Application
+        </a>
+    </div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h5>Quick Actions</h5>
+        <div class="btn-group" role="group">
+            <a href="{% url 'admissions:apply' %}" class="btn btn-outline-primary">
+                <i class="bi bi-plus-circle"></i> New Application
+            </a>
+            <a href="{% url 'dashboard:admin' %}" class="btn btn-outline-info">
+                <i class="bi bi-graph-up"></i> View Dashboard
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-house"></i> Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

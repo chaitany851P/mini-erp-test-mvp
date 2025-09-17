@@ -1,0 +1,383 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - Mini ERP System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-3">
+            <i class="bi bi-speedometer2 text-primary"></i> Admin Dashboard
+        </h2>
+        <p class="text-muted">Real-time overview of system statistics and performance metrics</p>
+    </div>
+</div>
+
+<!-- Key Statistics Cards -->
+<div class="row mb-5">
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card bg-primary text-white shadow-lg h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-uppercase">Total Applications</h6>
+                        <h2 class="mb-0 display-4">{{ stats.admissions_count|default:0 }}</h2>
+                        <p class="mb-0"><small>Student admissions</small></p>
+                    </div>
+                    <div class="text-end">
+                        <i class="bi bi-person-plus display-3 opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-primary bg-opacity-25 border-0">
+                <div class="d-flex justify-content-between">
+                    <small>Updated in real-time</small>
+                    <a href="{% url 'admissions:list' %}" class="text-white text-decoration-none">
+                        <small>View Details <i class="bi bi-arrow-right"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card bg-success text-white shadow-lg h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-uppercase">Total Revenue</h6>
+                        <h2 class="mb-0 display-4">${{ stats.fees_total|floatformat:0|default:0 }}</h2>
+                        <p class="mb-0"><small>Fees collected</small></p>
+                    </div>
+                    <div class="text-end">
+                        <i class="bi bi-cash-stack display-3 opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-success bg-opacity-25 border-0">
+                <div class="d-flex justify-content-between">
+                    <small>Live payment tracking</small>
+                    <a href="{% url 'fees:list' %}" class="text-white text-decoration-none">
+                        <small>View Details <i class="bi bi-arrow-right"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 col-md-12 mb-4">
+        <div class="card bg-warning text-dark shadow-lg h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-uppercase">Hostel Occupancy</h6>
+                        <h2 class="mb-0 display-4">{{ stats.hostel_occupancy|floatformat:1|default:0 }}%</h2>
+                        <p class="mb-0"><small>Room utilization</small></p>
+                    </div>
+                    <div class="text-end">
+                        <i class="bi bi-house-door display-3 opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-warning bg-opacity-25 border-0">
+                <div class="d-flex justify-content-between">
+                    <small>Current capacity</small>
+                    <a href="{% url 'hostel:allocations' %}" class="text-dark text-decoration-none">
+                        <small>View Details <i class="bi bi-arrow-right"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Indicators -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="bi bi-bar-chart-line text-info"></i> System Overview
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-medium">Admissions Progress</span>
+                            <span class="text-muted">{{ stats.admissions_count|default:0 }}/500</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-primary" 
+                                 style="width: {% widthratio stats.admissions_count|default:0 500 100 %}%"
+                                 role="progressbar">
+                            </div>
+                        </div>
+                        <small class="text-muted">Target: 500 admissions</small>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-medium">Revenue Target</span>
+                            <span class="text-muted">${{ stats.fees_total|floatformat:0|default:0 }}/100K</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-success" 
+                                 style="width: {% widthratio stats.fees_total|default:0 100000 100 %}%"
+                                 role="progressbar">
+                            </div>
+                        </div>
+                        <small class="text-muted">Target: $100,000 collected</small>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-medium">Hostel Capacity</span>
+                            <span class="text-muted">{{ stats.hostel_occupancy|floatformat:1|default:0 }}%</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-warning" 
+                                 style="width: {{ stats.hostel_occupancy|default:0 }}%"
+                                 role="progressbar">
+                            </div>
+                        </div>
+                        <small class="text-muted">Current occupancy rate</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions and System Health -->
+<div class="row mb-5">
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightning text-primary"></i> Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <a href="{% url 'admissions:apply' %}" class="btn btn-outline-primary btn-lg w-100 d-flex align-items-center">
+                            <i class="bi bi-person-plus me-3"></i>
+                            <div class="text-start">
+                                <div>New Application</div>
+                                <small class="text-muted">Submit admission form</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{% url 'fees:payment' %}" class="btn btn-outline-success btn-lg w-100 d-flex align-items-center">
+                            <i class="bi bi-cash-coin me-3"></i>
+                            <div class="text-start">
+                                <div>Process Payment</div>
+                                <small class="text-muted">Fee collection</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{% url 'hostel:request' %}" class="btn btn-outline-warning btn-lg w-100 d-flex align-items-center">
+                            <i class="bi bi-house-door me-3"></i>
+                            <div class="text-start">
+                                <div>Hostel Request</div>
+                                <small class="text-muted">Room allocation</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="/admin/" class="btn btn-outline-secondary btn-lg w-100 d-flex align-items-center">
+                            <i class="bi bi-gear me-3"></i>
+                            <div class="text-start">
+                                <div>Admin Panel</div>
+                                <small class="text-muted">System management</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="bi bi-shield-check text-success"></i> System Health
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-3">
+                        <i class="bi bi-database-check text-success display-6"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-1">Database Status</h6>
+                        <span class="badge bg-success">Online</span>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-3">
+                        <i class="bi bi-cloud-check text-info display-6"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-1">Firebase Status</h6>
+                        <span class="badge bg-info">Connected</span>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-3">
+                        <i class="bi bi-file-earmark-pdf text-danger display-6"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-1">PDF Service</h6>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                </div>
+                
+                <hr>
+                <div class="text-center">
+                    <small class="text-muted">Last updated: {{ now|date:"M d, Y g:i A" }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history text-secondary"></i> Recent System Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6 class="timeline-title">System Initialized</h6>
+                            <p class="timeline-text">Mini ERP system started successfully</p>
+                            <small class="text-muted">{{ now|date:"M d, Y g:i A" }}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6 class="timeline-title">Database Connected</h6>
+                            <p class="timeline-text">Successfully connected to Firebase Firestore</p>
+                            <small class="text-muted">{{ now|date:"M d, Y g:i A" }}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-info"></div>
+                        <div class="timeline-content">
+                            <h6 class="timeline-title">Services Online</h6>
+                            <p class="timeline-text">All system modules are operational</p>
+                            <small class="text-muted">{{ now|date:"M d, Y g:i A" }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation Links -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <h6 class="card-title">Explore System Modules</h6>
+                <div class="btn-group-lg" role="group">
+                    <a href="{% url 'admissions:list' %}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-people"></i> Admissions
+                    </a>
+                    <a href="{% url 'fees:list' %}" class="btn btn-outline-success me-2">
+                        <i class="bi bi-receipt"></i> Fee Management
+                    </a>
+                    <a href="{% url 'hostel:requests' %}" class="btn btn-outline-warning me-2">
+                        <i class="bi bi-house-door"></i> Hostel Management
+                    </a>
+                    <a href="{% url 'home' %}" class="btn btn-outline-info">
+                        <i class="bi bi-house"></i> Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -25px;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #dee2e6;
+}
+
+.timeline-title {
+    margin-bottom: 5px;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.timeline-text {
+    margin-bottom: 5px;
+    color: #6c757d;
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.progress {
+    border-radius: 50px;
+}
+
+.btn-lg .text-start {
+    flex-grow: 1;
+}
+
+.display-4 {
+    font-weight: 700;
+}
+</style>
+{% endblock %}

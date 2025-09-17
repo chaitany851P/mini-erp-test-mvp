@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+
+{% block title %}Hostel Allocations - Mini ERP System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">
+        <i class="bi bi-house-check text-info"></i> Room Allocations
+    </h2>
+    <div>
+        <a href="{% url 'hostel:requests' %}" class="btn btn-outline-warning me-2">
+            <i class="bi bi-clipboard-check"></i> View Requests
+        </a>
+        <a href="{% url 'hostel:request' %}" class="btn btn-warning">
+            <i class="bi bi-plus-circle"></i> New Request
+        </a>
+    </div>
+</div>
+
+{% if allocations %}
+    <div class="card shadow">
+        <div class="card-header bg-light">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="mb-0">Active Allocations: {{ allocations|length }}</h6>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted">Currently occupied rooms</small>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-info">
+                        <tr>
+                            <th>Allocation ID</th>
+                            <th>Student Details</th>
+                            <th>Room Info</th>
+                            <th>Check-in Date</th>
+                            <th>Check-out Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for allocation in allocations %}
+                        <tr>
+                            <td>
+                                <span class="fw-bold text-primary">{{ allocation.allocation_id }}</span>
+                            </td>
+                            <td>
+                                <div>
+                                    <strong>{{ allocation.student_name }}</strong>
+                                </div>
+                                <div class="small text-muted">
+                                    ID: {{ allocation.student_id }}
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <strong class="text-info">Room {{ allocation.room_number }}</strong>
+                                </div>
+                                <div class="small">
+                                    <span class="badge bg-secondary">{{ allocation.get_room_type_display }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                {% if allocation.check_in_date %}
+                                    <div>{{ allocation.check_in_date|date:"M d, Y" }}</div>
+                                {% else %}
+                                    <span class="text-muted">Not set</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if allocation.check_out_date %}
+                                    <div>{{ allocation.check_out_date|date:"M d, Y" }}</div>
+                                    {% if allocation.check_out_date|date:"Y-m-d" < today|date:"Y-m-d" %}
+                                        <div class="small text-danger">Expired</div>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Ongoing</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if allocation.is_active %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Active
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-x-circle"></i> Inactive
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Room Type Distribution -->
+    <div class="row mt-4">
+        <div class="col-12 mb-3">
+            <h5>Room Type Distribution</h5>
+        </div>
+        
+        {% with single_count=0 double_count=0 triple_count=0 dorm_count=0 %}
+            {% for allocation in allocations %}
+                {% if allocation.room_type == 'single' %}
+                    {% with single_count=single_count|add:1 %}{% endwith %}
+                {% elif allocation.room_type == 'double' %}
+                    {% with double_count=double_count|add:1 %}{% endwith %}
+                {% elif allocation.room_type == 'triple' %}
+                    {% with triple_count=triple_count|add:1 %}{% endwith %}
+                {% elif allocation.room_type == 'dormitory' %}
+                    {% with dorm_count=dorm_count|add:1 %}{% endwith %}
+                {% endif %}
+            {% endfor %}
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-primary bg-opacity-10 border-primary">
+                    <div class="card-body text-center">
+                        <i class="bi bi-house display-6 text-primary"></i>
+                        <h4 class="mt-2">{{ single_count }}</h4>
+                        <p class="text-muted mb-0">Single Rooms</p>
+                        <small class="text-muted">$500/month</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-success bg-opacity-10 border-success">
+                    <div class="card-body text-center">
+                        <i class="bi bi-house display-6 text-success"></i>
+                        <h4 class="mt-2">{{ double_count }}</h4>
+                        <p class="text-muted mb-0">Double Rooms</p>
+                        <small class="text-muted">$350/month</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-warning bg-opacity-10 border-warning">
+                    <div class="card-body text-center">
+                        <i class="bi bi-house display-6 text-warning"></i>
+                        <h4 class="mt-2">{{ triple_count }}</h4>
+                        <p class="text-muted mb-0">Triple Rooms</p>
+                        <small class="text-muted">$250/month</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-info bg-opacity-10 border-info">
+                    <div class="card-body text-center">
+                        <i class="bi bi-house display-6 text-info"></i>
+                        <h4 class="mt-2">{{ dorm_count }}</h4>
+                        <p class="text-muted mb-0">Dormitories</p>
+                        <small class="text-muted">$150/month</small>
+                    </div>
+                </div>
+            </div>
+        {% endwith %}
+    </div>
+    
+    <!-- Recent Allocations -->
+    {% with recent_allocations=allocations|slice:":5" %}
+        {% if recent_allocations %}
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock-history"></i> Recent Allocations
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for allocation in recent_allocations %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold">{{ allocation.student_name }}</div>
+                                <small class="text-muted">
+                                    Room {{ allocation.room_number }} ({{ allocation.get_room_type_display }})
+                                    - Allocated: {{ allocation.allocated_at|date:"M d, Y" }}
+                                </small>
+                            </div>
+                            <div>
+                                {% if allocation.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Occupancy Summary -->
+    <div class="card mt-4">
+        <div class="card-header bg-light">
+            <h6 class="mb-0">
+                <i class="bi bi-bar-chart"></i> Occupancy Summary
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-3">
+                            <i class="bi bi-people display-5 text-primary"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-0">{{ allocations|length }}</h4>
+                            <p class="text-muted mb-0">Total Occupied Rooms</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-3">
+                            <i class="bi bi-calendar-check display-5 text-success"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-0">
+                                {% with active_count=0 %}
+                                    {% for allocation in allocations %}
+                                        {% if allocation.is_active %}
+                                            {% with active_count=active_count|add:1 %}{% endwith %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {{ active_count }}
+                                {% endwith %}
+                            </h4>
+                            <p class="text-muted mb-0">Active Allocations</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Room Status Bars -->
+            <div class="mt-4">
+                <h6>Room Type Utilization</h6>
+                {% with single_count=0 double_count=0 triple_count=0 dorm_count=0 %}
+                    {% for allocation in allocations %}
+                        {% if allocation.room_type == 'single' %}
+                            {% with single_count=single_count|add:1 %}{% endwith %}
+                        {% elif allocation.room_type == 'double' %}
+                            {% with double_count=double_count|add:1 %}{% endwith %}
+                        {% elif allocation.room_type == 'triple' %}
+                            {% with triple_count=triple_count|add:1 %}{% endwith %}
+                        {% elif allocation.room_type == 'dormitory' %}
+                            {% with dorm_count=dorm_count|add:1 %}{% endwith %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <small>Single Rooms</small>
+                            <small>{{ single_count }}/20 ({% widthratio single_count 20 100 %}%)</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-primary" style="width: {% widthratio single_count 20 100 %}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <small>Double Rooms</small>
+                            <small>{{ double_count }}/30 ({% widthratio double_count 30 100 %}%)</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: {% widthratio double_count 30 100 %}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <small>Triple Rooms</small>
+                            <small>{{ triple_count }}/25 ({% widthratio triple_count 25 100 %}%)</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-warning" style="width: {% widthratio triple_count 25 100 %}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <small>Dormitories</small>
+                            <small>{{ dorm_count }}/15 ({% widthratio dorm_count 15 100 %}%)</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-info" style="width: {% widthratio dorm_count 15 100 %}%"></div>
+                        </div>
+                    </div>
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+    
+{% else %}
+    <!-- Empty State -->
+    <div class="text-center py-5">
+        <i class="bi bi-house-slash display-1 text-muted"></i>
+        <h4 class="mt-3 text-muted">No Room Allocations Found</h4>
+        <p class="text-muted">There are currently no active room allocations in the system.</p>
+        <div class="mt-4">
+            <a href="{% url 'hostel:request' %}" class="btn btn-warning btn-lg me-3">
+                <i class="bi bi-plus-circle"></i> Submit Room Request
+            </a>
+            <a href="{% url 'hostel:requests' %}" class="btn btn-outline-info btn-lg">
+                <i class="bi bi-clipboard-check"></i> View Requests
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h5>Quick Actions</h5>
+        <div class="btn-group" role="group">
+            <a href="{% url 'hostel:request' %}" class="btn btn-outline-warning">
+                <i class="bi bi-plus-circle"></i> New Request
+            </a>
+            <a href="{% url 'hostel:requests' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-clipboard-check"></i> View Requests
+            </a>
+            <a href="{% url 'fees:payment' %}" class="btn btn-outline-success">
+                <i class="bi bi-cash-coin"></i> Pay Hostel Fee
+            </a>
+            <a href="{% url 'dashboard:admin' %}" class="btn btn-outline-primary">
+                <i class="bi bi-graph-up"></i> Dashboard
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-outline-info">
+                <i class="bi bi-house"></i> Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,1 +1,0 @@
-# mini-erp-test-mvp

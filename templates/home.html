@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Mini ERP System{% endblock %}
+
+{% block content %}
+<div class="hero-section bg-primary text-white py-5 mb-5 rounded">
+    <div class="container text-center">
+        <h1 class="display-4">Welcome to Mini ERP System</h1>
+        <p class="lead">Complete educational management solution for admissions, fees, and hostel management</p>
+        <a href="{% url 'dashboard:admin' %}" class="btn btn-light btn-lg">View Dashboard</a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Admissions Card -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-person-plus text-primary" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title">Student Admissions</h5>
+                <p class="card-text">Handle student applications and manage admission process efficiently.</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'admissions:apply' %}" class="btn btn-primary">Apply Now</a>
+                    <a href="{% url 'admissions:list' %}" class="btn btn-outline-primary">View Applications</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fees Card -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-cash-coin text-success" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title">Fee Management</h5>
+                <p class="card-text">Process fee payments and generate receipts automatically.</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'fees:payment' %}" class="btn btn-success">Pay Fees</a>
+                    <a href="{% url 'fees:list' %}" class="btn btn-outline-success">Payment History</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hostel Card -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-house-door text-warning" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title">Hostel Management</h5>
+                <p class="card-text">Manage room requests, allocations, and hostel capacity tracking.</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'hostel:request' %}" class="btn btn-warning">Request Room</a>
+                    <a href="{% url 'hostel:requests' %}" class="btn btn-outline-warning">View Requests</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats Row -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h3 class="mb-4">Quick Overview</h3>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5>Total Applications</h5>
+                <p class="h4">{{ stats.admissions_count|default:0 }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5>Fees Collected</h5>
+                <p class="h4">${{ stats.fees_total|default:0 }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h5>Hostel Occupancy</h5>
+                <p class="h4">{{ stats.hostel_occupancy|default:0 }}%</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h3 class="mb-4">Features</h3>
+    </div>
+    <div class="col-md-6 mb-3">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item"><i class="bi bi-check-circle text-success me-2"></i>Real-time application tracking</li>
+            <li class="list-group-item"><i class="bi bi-check-circle text-success me-2"></i>Automated PDF receipt generation</li>
+            <li class="list-group-item"><i class="bi bi-check-circle text-success me-2"></i>Firestore cloud database integration</li>
+        </ul>
+    </div>
+    <div class="col-md-6 mb-3">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item"><i class="bi bi-check-circle text-success me-2"></i>Room allocation management</li>
+            <li class="list-group-item"><i class="bi bi-check-circle text-success me-2"></i>Admin dashboard with statistics</li>
+            <li class="list-group-item"><i class="bi bi-check-circle text-success me-2"></i>Bootstrap responsive design</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Hostel Room Request - Mini ERP System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="bi bi-house-door me-2"></i>Hostel Room Request
+                </h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">Submit your hostel accommodation request. All fields marked with * are required.</p>
+                
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Student Information -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.student_id.id_for_label }}" class="form-label">
+                                Student ID <span class="text-danger">*</span>
+                            </label>
+                            {{ form.student_id }}
+                            {% if form.student_id.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.student_id.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.student_name.id_for_label }}" class="form-label">
+                                Student Name <span class="text-danger">*</span>
+                            </label>
+                            {{ form.student_name }}
+                            {% if form.student_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.student_name.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.student_email.id_for_label }}" class="form-label">
+                                Email Address <span class="text-danger">*</span>
+                            </label>
+                            {{ form.student_email }}
+                            {% if form.student_email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.student_email.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.student_phone.id_for_label }}" class="form-label">
+                                Phone Number <span class="text-danger">*</span>
+                            </label>
+                            {{ form.student_phone }}
+                            {% if form.student_phone.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.student_phone.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Room Preferences -->
+                    <hr class="my-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-house text-warning"></i> Room Preferences
+                    </h5>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.room_type.id_for_label }}" class="form-label">
+                            Room Type <span class="text-danger">*</span>
+                        </label>
+                        {{ form.room_type }}
+                        {% if form.room_type.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.room_type.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            Choose your preferred room type based on availability and budget
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.preferences.id_for_label }}" class="form-label">
+                            Special Preferences or Requirements
+                        </label>
+                        {{ form.preferences }}
+                        {% if form.preferences.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.preferences.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            Optional: Any special preferences like floor preference, roommate requests, medical requirements, etc.
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'hostel:requests' %}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-arrow-left"></i> View Requests
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-send"></i> Submit Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Room Types Information -->
+        <div class="card mt-4">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="bi bi-info-circle"></i> Room Types & Features
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Room Type</th>
+                                <th>Capacity</th>
+                                <th>Features</th>
+                                <th>Monthly Fee</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Single Room</strong></td>
+                                <td>1 Person</td>
+                                <td>Private bathroom, Study desk, Wardrobe</td>
+                                <td>$500/month</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Double Room</strong></td>
+                                <td>2 Persons</td>
+                                <td>Shared bathroom, 2 Study desks, 2 Wardrobes</td>
+                                <td>$350/month</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Triple Room</strong></td>
+                                <td>3 Persons</td>
+                                <td>Shared bathroom, 3 Study desks, 3 Wardrobes</td>
+                                <td>$250/month</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Dormitory</strong></td>
+                                <td>4+ Persons</td>
+                                <td>Common bathroom, Study area, Storage lockers</td>
+                                <td>$150/month</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Important Information -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title text-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Important Information
+                </h6>
+                <ul class="list-unstyled mb-0">
+                    <li><i class="bi bi-check text-success"></i> Room allocation is based on availability and first-come-first-serve basis</li>
+                    <li><i class="bi bi-check text-success"></i> You will be notified via email once your request is processed</li>
+                    <li><i class="bi bi-check text-success"></i> Payment must be completed within 7 days of room allocation</li>
+                    <li><i class="bi bi-check text-success"></i> All hostel rules and regulations must be followed</li>
+                    <li><i class="bi bi-check text-success"></i> Security deposit is required at the time of check-in</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-format student ID to uppercase
+    const studentIdField = document.querySelector('#{{ form.student_id.id_for_label }}');
+    if (studentIdField) {
+        studentIdField.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+    }
+    
+    // Room type selection handler
+    const roomTypeField = document.querySelector('#{{ form.room_type.id_for_label }}');
+    if (roomTypeField) {
+        roomTypeField.addEventListener('change', function() {
+            const selectedType = this.value;
+            // You can add more interactive features here
+            console.log('Selected room type:', selectedType);
+        });
+    }
+});
+</script>
+{% endblock %}

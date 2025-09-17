@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment History - Mini ERP System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">
+        <i class="bi bi-receipt text-success"></i> Payment History
+    </h2>
+    <a href="{% url 'fees:payment' %}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Make Payment
+    </a>
+</div>
+
+{% if fees %}
+    <div class="card shadow">
+        <div class="card-header bg-light">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="mb-0">Total Transactions: {{ fees|length }}</h6>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted">Click on Transaction ID to download receipt</small>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-success">
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Student Name</th>
+                            <th>Fee Type</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Receipt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fee in fees %}
+                        <tr>
+                            <td>
+                                <span class="fw-bold text-primary">{{ fee.transaction_id }}</span>
+                            </td>
+                            <td>{{ fee.student_name }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ fee.fee_type }}</span>
+                            </td>
+                            <td>
+                                <strong class="text-success">${{ fee.amount }}</strong>
+                            </td>
+                            <td>
+                                {% if fee.status == 'completed' %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Completed
+                                    </span>
+                                {% elif fee.status == 'pending' %}
+                                    <span class="badge bg-warning">
+                                        <i class="bi bi-clock"></i> Pending
+                                    </span>
+                                {% elif fee.status == 'failed' %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-x-circle"></i> Failed
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ fee.status|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if fee.created_at %}
+                                    {{ fee.created_at|slice:":10" }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if fee.status == 'completed' %}
+                                    <a href="{% url 'fees:receipt' fee.transaction_id %}" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       title="Download Receipt">
+                                        <i class="bi bi-download"></i> PDF
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Payment Summary Statistics -->
+    <div class="row mt-4">
+        <div class="col-12 mb-3">
+            <h5>Payment Summary</h5>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success bg-opacity-10 border-success">
+                <div class="card-body text-center">
+                    <i class="bi bi-check-circle display-6 text-success"></i>
+                    <h4 class="mt-2">
+                        {% with completed_count=0 %}
+                            {% for fee in fees %}
+                                {% if fee.status == 'completed' %}
+                                    {% with completed_count=completed_count|add:1 %}{% endwith %}
+                                {% endif %}
+                            {% endfor %}
+                            {{ completed_count }}
+                        {% endwith %}
+                    </h4>
+                    <p class="text-muted mb-0">Completed</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning bg-opacity-10 border-warning">
+                <div class="card-body text-center">
+                    <i class="bi bi-clock-history display-6 text-warning"></i>
+                    <h4 class="mt-2">
+                        {% with pending_count=0 %}
+                            {% for fee in fees %}
+                                {% if fee.status == 'pending' %}
+                                    {% with pending_count=pending_count|add:1 %}{% endwith %}
+                                {% endif %}
+                            {% endfor %}
+                            {{ pending_count }}
+                        {% endwith %}
+                    </h4>
+                    <p class="text-muted mb-0">Pending</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-danger bg-opacity-10 border-danger">
+                <div class="card-body text-center">
+                    <i class="bi bi-x-circle display-6 text-danger"></i>
+                    <h4 class="mt-2">
+                        {% with failed_count=0 %}
+                            {% for fee in fees %}
+                                {% if fee.status == 'failed' %}
+                                    {% with failed_count=failed_count|add:1 %}{% endwith %}
+                                {% endif %}
+                            {% endfor %}
+                            {{ failed_count }}
+                        {% endwith %}
+                    </h4>
+                    <p class="text-muted mb-0">Failed</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary bg-opacity-10 border-primary">
+                <div class="card-body text-center">
+                    <i class="bi bi-cash-stack display-6 text-primary"></i>
+                    <h4 class="mt-2">
+                        ${% with total_amount=0 %}
+                            {% for fee in fees %}
+                                {% if fee.status == 'completed' %}
+                                    {% with total_amount=total_amount|add:fee.amount %}{% endwith %}
+                                {% endif %}
+                            {% endfor %}
+                            {{ total_amount|floatformat:2 }}
+                        {% endwith %}
+                    </h4>
+                    <p class="text-muted mb-0">Total Paid</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Payments -->
+    {% with recent_fees=fees|slice:":5" %}
+        {% if recent_fees %}
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock-history"></i> Recent Payments
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for fee in recent_fees %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold">{{ fee.student_name }}</div>
+                                <small class="text-muted">
+                                    {{ fee.fee_type }} - ${{ fee.amount }} 
+                                    {% if fee.created_at %}
+                                        ({{ fee.created_at|slice:":10" }})
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div>
+                                {% if fee.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% elif fee.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Failed</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+{% else %}
+    <!-- Empty State -->
+    <div class="text-center py-5">
+        <i class="bi bi-receipt display-1 text-muted"></i>
+        <h4 class="mt-3 text-muted">No Payment Records Found</h4>
+        <p class="text-muted">There are currently no fee payments in the system.</p>
+        <a href="{% url 'fees:payment' %}" class="btn btn-success btn-lg mt-3">
+            <i class="bi bi-plus-circle"></i> Make First Payment
+        </a>
+    </div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h5>Quick Actions</h5>
+        <div class="btn-group" role="group">
+            <a href="{% url 'fees:payment' %}" class="btn btn-outline-success">
+                <i class="bi bi-plus-circle"></i> New Payment
+            </a>
+            <a href="{% url 'dashboard:admin' %}" class="btn btn-outline-info">
+                <i class="bi bi-graph-up"></i> View Dashboard
+            </a>
+            <a href="{% url 'admissions:list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-person-plus"></i> View Applications
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-house"></i> Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.table th {
+    border-top: none;
+}
+
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+</style>
+{% endblock %}
