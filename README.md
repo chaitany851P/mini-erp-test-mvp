@@ -1,48 +1,67 @@
-# Mini ERP System (Hackathon MVP) 🎯
+Mini ERP System (Hackathon MVP) 🎯
 
 A comprehensive educational management system built with Django and Firebase Firestore, featuring real-time admissions, fee management, and hostel allocation.
 
-## 🔹 Features
+🔹 Features
+Core Modules
 
-### Core Modules
+Admissions 🎓
 
-1. **Admissions** 🎓
-   - Student application form with validation
-   - Real-time application tracking
-   - Admin approval workflow
-   - Firestore cloud storage integration
+Student application form with validation
 
-2. **Fees** 💰
-   - Fee payment processing
-   - Multiple payment modes (Cash, Card, UPI, etc.)
-   - Automated PDF receipt generation
-   - Payment history tracking
+Real-time application tracking
 
-3. **Hostel** 🏠
-   - Room request submission
-   - Capacity management
-   - Allocation tracking
-   - Occupancy statistics
+Admin approval workflow
 
-4. **Admin Dashboard** 📊
-   - Real-time statistics
-   - Total admissions count
-   - Fees collected summary
-   - Hostel occupancy with progress bars
-   - Responsive Bootstrap interface
+Firestore cloud storage integration
 
-## 🔹 Tech Stack
+Fees 💰
 
-- **Backend**: Django 5.2.6
-- **Database**: Firestore (Cloud) + SQLite (Local backup)
-- **PDF Generation**: ReportLab
-- **Frontend**: HTML/CSS/JS with Bootstrap 5
-- **Cloud**: Firebase Admin SDK
-- **Environment**: Python virtual environment
+Fee payment processing
 
-## 🔹 Firestore Structure
+Multiple payment modes (Cash, Card, UPI, etc.)
 
-```
+Automated PDF receipt generation
+
+Payment history tracking
+
+Hostel 🏠
+
+Room request submission
+
+Capacity management
+
+Allocation tracking
+
+Occupancy statistics
+
+Admin Dashboard 📊
+
+Real-time statistics
+
+Total admissions count
+
+Fees collected summary
+
+Hostel occupancy with progress bars
+
+Responsive Bootstrap interface
+
+🔹 Tech Stack
+
+Backend: Django 5.2.6
+
+Database: Firestore (Cloud) + SQLite (Local backup)
+
+PDF Generation: ReportLab
+
+Frontend: HTML/CSS/JS with Bootstrap 5
+
+Cloud: Firebase Admin SDK
+
+Environment: Python virtual environment
+
+🔹 Firestore Structure
 admissions/{student_id}
 ├── student_id: string
 ├── first_name: string
@@ -91,25 +110,19 @@ hostel_allocation/{allocation_id}
 ├── check_in_date: string (ISO format)
 ├── check_out_date: string (ISO format)
 └── is_active: boolean
-```
 
-## 🚀 Setup Instructions
+🚀 Setup Instructions
+Prerequisites
 
-### Prerequisites
+Python 3.8 or higher
 
-- Python 3.8 or higher
-- Git
+Git
 
-### 1. Clone the Repository
-
-```bash
+1. Clone the Repository
 git clone <repository-url>
 cd mini-erp-hackathon
-```
 
-### 2. Create Virtual Environment
-
-```bash
+2. Create Virtual Environment
 # Windows
 python -m venv venv
 venv\Scripts\activate
@@ -117,211 +130,169 @@ venv\Scripts\activate
 # macOS/Linux
 python3 -m venv venv
 source venv/bin/activate
-```
 
-### 3. Install Dependencies
-
-```bash
+3. Install Dependencies
 pip install -r requirements.txt
-```
 
-### 4. Configure Firebase (Optional)
+4. Configure Firebase (Optional)
 
-1. Go to [Firebase Console](https://console.firebase.google.com)
-2. Create a new project or use existing one
-3. Generate a service account key:
-   - Go to Project Settings → Service accounts
-   - Generate new private key
-   - Save as `firebase-admin-sdk.json` in the project root
+Go to Firebase Console
 
-4. Copy `.env.example` to `.env` and fill in your Firebase credentials (if using environment variables)
+Create a new project or use an existing one
 
-> **Note**: The system works without Firebase credentials using local SQLite database as fallback.
+Generate a service account key:
 
-### 5. Run Database Migrations
+Project Settings → Service accounts → Generate new private key
 
-```bash
+Save as firebase-admin-sdk.json in the project root
+
+Copy .env.example to .env and fill in Firebase credentials
+
+Note: The system works without Firebase credentials using local SQLite database as a fallback.
+
+5. Run Database Migrations
 python manage.py makemigrations
 python manage.py migrate
-```
 
-### 6. Create Superuser (Optional)
-
-```bash
+6. Create Superuser (Optional)
 python manage.py createsuperuser
-```
 
-### 7. Run Development Server
-
-```bash
+7. Run Development Server
 python manage.py runserver
-```
 
-Visit `http://127.0.0.1:8000` to access the application.
 
-## 🎯 Usage Guide
+Visit http://127.0.0.1:8000 to access the application.
 
-### For Students
+🎯 Usage Guide
+For Students
 
-1. **Apply for Admission**
-   - Navigate to Admissions → Apply Now
-   - Fill out the application form
-   - Receive unique Student ID
-   - Track application status
+Apply for Admission
 
-2. **Pay Fees**
-   - Navigate to Fees → Pay Fees
-   - Enter student details and payment information
-   - Download PDF receipt automatically
+Admissions → Apply Now
 
-3. **Request Hostel**
-   - Navigate to Hostel → Request Room
-   - Submit room preference
-   - Check allocation status
+Fill out the application form
 
-### For Administrators
+Receive unique Student ID
 
-1. **View Dashboard**
-   - Access comprehensive statistics
-   - Monitor real-time data
-   - Track system performance
+Track application status
 
-2. **Manage Applications**
-   - Review student applications
-   - Approve/reject admissions
-   - Track application flow
+Pay Fees
 
-3. **Monitor Finances**
-   - View fee collection statistics
-   - Download payment reports
-   - Track revenue
+Fees → Pay Fees
 
-## 📁 Project Structure
+Enter student details and payment information
 
-```
+Download PDF receipt automatically
+
+Request Hostel
+
+Hostel → Request Room
+
+Submit room preferences
+
+Check allocation status
+
+For Administrators
+
+View Dashboard
+
+Monitor real-time statistics
+
+Track system performance
+
+Manage Applications
+
+Review and approve/reject student applications
+
+Track application workflow
+
+Monitor Finances
+
+View fee collection statistics
+
+Download payment reports
+
+Track revenue
+
+📁 Project Structure
 mini-erp-hackathon/
 ├── mini_erp/                 # Main Django project
-│   ├── settings.py           # Django settings
-│   ├── urls.py              # Main URL configuration
-│   ├── firebase_utils.py    # Firestore utility functions
-│   └── wsgi.py              # WSGI configuration
-├── admissions/              # Admissions app
-│   ├── models.py            # Admission model
-│   ├── forms.py             # Application forms
-│   ├── views.py             # Business logic
-│   └── urls.py              # URL patterns
-├── fees/                    # Fees app
-│   ├── models.py            # FeePayment model
-│   ├── forms.py             # Payment forms
-│   ├── views.py             # Payment processing
-│   ├── pdf_generator.py     # PDF receipt generation
-│   └── urls.py              # URL patterns
-├── hostel/                  # Hostel app
-│   ├── models.py            # Hostel models
-│   ├── forms.py             # Request forms
-│   ├── views.py             # Hostel management
-│   └── urls.py              # URL patterns
-├── dashboard/               # Dashboard app
-│   ├── views.py             # Statistics and analytics
-│   └── urls.py              # URL patterns
-├── templates/               # HTML templates
-│   ├── base.html            # Base template with Bootstrap
-│   └── home.html            # Landing page
-├── static/                  # Static files (CSS, JS)
-├── media/                   # Upload directory
-├── requirements.txt         # Python dependencies
-├── .env.example            # Environment variables template
-└── README.md               # This file
-```
+│   ├── settings.py
+│   ├── urls.py
+│   ├── firebase_utils.py
+│   └── wsgi.py
+├── admissions/               # Admissions app
+│   ├── models.py
+│   ├── forms.py
+│   ├── views.py
+│   └── urls.py
+├── fees/                     # Fees app
+│   ├── models.py
+│   ├── forms.py
+│   ├── views.py
+│   ├── pdf_generator.py
+│   └── urls.py
+├── hostel/                   # Hostel app
+│   ├── models.py
+│   ├── forms.py
+│   ├── views.py
+│   └── urls.py
+├── dashboard/                # Dashboard app
+│   ├── views.py
+│   └── urls.py
+├── templates/                # HTML templates
+├── static/                   # Static files (CSS, JS)
+├── media/                    # Upload directory
+├── requirements.txt
+├── .env.example
+└── README.md
 
-## 🔹 Key Features Implemented
+🔹 Key Features Implemented
 
-### ✅ Real-time Data Sync
-- Firestore integration for cloud storage
-- Local SQLite fallback for offline functionality
-- Automatic data synchronization
+Real-time Data Sync: Firestore cloud storage with SQLite fallback
 
-### ✅ PDF Generation
-- Professional receipt generation using ReportLab
-- Downloadable PDF receipts for fee payments
-- Branded templates with school information
+PDF Generation: Professional receipts via ReportLab
 
-### ✅ Responsive Design
-- Bootstrap 5 for mobile-first design
-- Professional UI with consistent styling
-- Interactive dashboard with progress bars
+Responsive Design: Mobile-first Bootstrap 5 UI
 
-### ✅ Error Handling
-- Comprehensive logging system
-- Graceful error handling and user feedback
-- Fallback mechanisms for service interruptions
+Error Handling: Logging system and graceful user feedback
 
-### ✅ Security
-- Django's built-in security features
-- CSRF protection on all forms
-- Input validation and sanitization
+Security: CSRF protection, input validation, and sanitization
 
-## 🎯 Future Enhancements
+🎯 Future Enhancements
 
-### Stretch Goals (Not Yet Implemented)
+Email/SMS notifications for fees and admission status
 
-1. **Email/SMS Notifications**
-   - Fee payment confirmations
-   - Application status updates
-   - Automated reminders
+Role-based access control for students, admins, and wardens
 
-2. **Role-based Access Control**
-   - Student login portal
-   - Admin dashboard access control
-   - Warden permissions for hostel management
+Exam management module with grade and result generation
 
-3. **Exam Management Module**
-   - Marks entry system
-   - PDF result card generation
-   - Grade calculations
+Advanced reporting with charts and analytics
 
-4. **Advanced Reporting**
-   - Financial reports with charts
-   - Admission analytics
-   - Occupancy trends
+🐛 Troubleshooting
 
-## 🐛 Troubleshooting
+Common Issues:
 
-### Common Issues
+Firebase Connection: Ensure JSON key is present and project config is correct
 
-1. **Firebase Connection Issues**
-   - Ensure `firebase-admin-sdk.json` is in the project root
-   - Check internet connectivity
-   - Verify Firebase project configuration
+PDF Errors: Verify ReportLab installation, media directory permissions, and fonts
 
-2. **PDF Generation Errors**
-   - Ensure ReportLab is properly installed
-   - Check media directory permissions
-   - Verify font availability
+Database Issues: Apply migrations, check SQLite permissions, and activate virtual environment
 
-3. **Database Issues**
-   - Run `python manage.py migrate` to apply migrations
-   - Check SQLite file permissions
-   - Ensure virtual environment is activated
+📄 License
 
-### Getting Help
+This project is for educational purposes (hackathon MVP). Free to use and modify.
 
-1. Check the Django debug output for detailed error messages
-2. Review the application logs for Firebase connection issues
-3. Ensure all dependencies are installed correctly
+🤝 Contributing
 
-## 📄 License
+Fork the repository
 
-This project is created for educational purposes as part of a hackathon MVP. Feel free to use and modify as needed.
+Create a feature branch
 
-## 🤝 Contributing
+Commit changes
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+Push to the branch
 
----
+Create a Pull Request
 
-**Built with ❤️ for educational management**
+Built with ❤️ for educational management
