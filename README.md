@@ -1,67 +1,58 @@
-Mini ERP System (Hackathon MVP) 🎯
+# Mini ERP System (Hackathon MVP) 🎯
 
-A comprehensive educational management system built with Django and Firebase Firestore, featuring real-time admissions, fee management, and hostel allocation.
+A comprehensive educational management system built with **Django** and **Firebase Firestore**, featuring **real-time admissions**, **fee management**, and **hostel allocation**.
 
-🔹 Features
-Core Modules
+---
 
-Admissions 🎓
+## 🔹 Features
 
-Student application form with validation
+### Core Modules
 
-Real-time application tracking
+1. **Admissions** 🎓
 
-Admin approval workflow
+   * Student application form with validation
+   * Real-time application tracking
+   * Admin approval workflow
+   * Firestore cloud storage integration
 
-Firestore cloud storage integration
+2. **Fees** 💰
 
-Fees 💰
+   * Fee payment processing
+   * Multiple payment modes (Cash, Card, UPI, etc.)
+   * Automated PDF receipt generation
+   * Payment history tracking
 
-Fee payment processing
+3. **Hostel** 🏠
 
-Multiple payment modes (Cash, Card, UPI, etc.)
+   * Room request submission
+   * Capacity management
+   * Allocation tracking
+   * Occupancy statistics
 
-Automated PDF receipt generation
+4. **Admin Dashboard** 📊
 
-Payment history tracking
+   * Real-time statistics
+   * Total admissions count
+   * Fees collected summary
+   * Hostel occupancy with progress bars
+   * Responsive Bootstrap interface
 
-Hostel 🏠
+---
 
-Room request submission
+## 🔹 Tech Stack
 
-Capacity management
+* **Backend**: Django 5.2.6
+* **Database**: Firestore (Cloud) + SQLite (Local backup)
+* **PDF Generation**: ReportLab
+* **Frontend**: HTML/CSS/JS with Bootstrap 5
+* **Cloud**: Firebase Admin SDK
+* **Environment**: Python virtual environment
 
-Allocation tracking
+---
 
-Occupancy statistics
+## 🔹 Firestore Structure
 
-Admin Dashboard 📊
-
-Real-time statistics
-
-Total admissions count
-
-Fees collected summary
-
-Hostel occupancy with progress bars
-
-Responsive Bootstrap interface
-
-🔹 Tech Stack
-
-Backend: Django 5.2.6
-
-Database: Firestore (Cloud) + SQLite (Local backup)
-
-PDF Generation: ReportLab
-
-Frontend: HTML/CSS/JS with Bootstrap 5
-
-Cloud: Firebase Admin SDK
-
-Environment: Python virtual environment
-
-🔹 Firestore Structure
+```
 admissions/{student_id}
 ├── student_id: string
 ├── first_name: string
@@ -110,19 +101,27 @@ hostel_allocation/{allocation_id}
 ├── check_in_date: string (ISO format)
 ├── check_out_date: string (ISO format)
 └── is_active: boolean
+```
 
-🚀 Setup Instructions
-Prerequisites
+---
 
-Python 3.8 or higher
+## 🚀 Setup Instructions
 
-Git
+### Prerequisites
 
-1. Clone the Repository
+* Python 3.8 or higher
+* Git
+
+### 1. Clone the Repository
+
+```bash
 git clone <repository-url>
 cd mini-erp-hackathon
+```
 
-2. Create Virtual Environment
+### 2. Create Virtual Environment
+
+```bash
 # Windows
 python -m venv venv
 venv\Scripts\activate
@@ -130,91 +129,98 @@ venv\Scripts\activate
 # macOS/Linux
 python3 -m venv venv
 source venv/bin/activate
+```
 
-3. Install Dependencies
+### 3. Install Dependencies
+
+```bash
 pip install -r requirements.txt
+```
 
-4. Configure Firebase (Optional)
+### 4. Configure Firebase (Optional)
 
-Go to Firebase Console
+1. Go to [Firebase Console](https://console.firebase.google.com)
 
-Create a new project or use an existing one
+2. Create a new project or use an existing one
 
-Generate a service account key:
+3. Generate a service account key:
 
-Project Settings → Service accounts → Generate new private key
+   * Project Settings → Service accounts → Generate new private key
+   * Save as `firebase-admin-sdk.json` in the project root
 
-Save as firebase-admin-sdk.json in the project root
+4. Copy `.env.example` to `.env` and fill in Firebase credentials
 
-Copy .env.example to .env and fill in Firebase credentials
+> **Note:** The system works without Firebase credentials using local SQLite database as a fallback.
 
-Note: The system works without Firebase credentials using local SQLite database as a fallback.
+### 5. Run Database Migrations
 
-5. Run Database Migrations
+```bash
 python manage.py makemigrations
 python manage.py migrate
+```
 
-6. Create Superuser (Optional)
+### 6. Create Superuser (Optional)
+
+```bash
 python manage.py createsuperuser
+```
 
-7. Run Development Server
+### 7. Run Development Server
+
+```bash
 python manage.py runserver
+```
 
+Visit `http://127.0.0.1:8000` to access the application.
 
-Visit http://127.0.0.1:8000 to access the application.
+---
 
-🎯 Usage Guide
-For Students
+## 🎯 Usage Guide
 
-Apply for Admission
+### For Students
 
-Admissions → Apply Now
+1. **Apply for Admission**
 
-Fill out the application form
+   * Admissions → Apply Now
+   * Fill out the application form
+   * Receive unique Student ID
+   * Track application status
 
-Receive unique Student ID
+2. **Pay Fees**
 
-Track application status
+   * Fees → Pay Fees
+   * Enter student details and payment information
+   * Download PDF receipt automatically
 
-Pay Fees
+3. **Request Hostel**
 
-Fees → Pay Fees
+   * Hostel → Request Room
+   * Submit room preferences
+   * Check allocation status
 
-Enter student details and payment information
+### For Administrators
 
-Download PDF receipt automatically
+1. **View Dashboard**
 
-Request Hostel
+   * Monitor real-time statistics
+   * Track system performance
 
-Hostel → Request Room
+2. **Manage Applications**
 
-Submit room preferences
+   * Review and approve/reject student applications
+   * Track application workflow
 
-Check allocation status
+3. **Monitor Finances**
 
-For Administrators
+   * View fee collection statistics
+   * Download payment reports
+   * Track revenue
 
-View Dashboard
+---
 
-Monitor real-time statistics
+## 📁 Project Structure
 
-Track system performance
-
-Manage Applications
-
-Review and approve/reject student applications
-
-Track application workflow
-
-Monitor Finances
-
-View fee collection statistics
-
-Download payment reports
-
-Track revenue
-
-📁 Project Structure
+```
 mini-erp-hackathon/
 ├── mini_erp/                 # Main Django project
 │   ├── settings.py
@@ -244,55 +250,55 @@ mini-erp-hackathon/
 ├── static/                   # Static files (CSS, JS)
 ├── media/                    # Upload directory
 ├── requirements.txt
-├── .env.example
+├── .env 
 └── README.md
+```
 
-🔹 Key Features Implemented
+---
 
-Real-time Data Sync: Firestore cloud storage with SQLite fallback
+## 🔹 Key Features Implemented
 
-PDF Generation: Professional receipts via ReportLab
+* **Real-time Data Sync:** Firestore cloud storage with SQLite fallback
+* **PDF Generation:** Professional receipts via ReportLab
+* **Responsive Design:** Mobile-first Bootstrap 5 UI
+* **Error Handling:** Logging system and graceful user feedback
+* **Security:** CSRF protection, input validation, and sanitization
 
-Responsive Design: Mobile-first Bootstrap 5 UI
+---
 
-Error Handling: Logging system and graceful user feedback
+## 🎯 Future Enhancements
 
-Security: CSRF protection, input validation, and sanitization
+* Email/SMS notifications for fees and admission status
+* Role-based access control for students, admins, and wardens
+* Exam management module with grade and result generation
+* Advanced reporting with charts and analytics
 
-🎯 Future Enhancements
+---
 
-Email/SMS notifications for fees and admission status
+## 🐛 Troubleshooting
 
-Role-based access control for students, admins, and wardens
+**Common Issues:**
 
-Exam management module with grade and result generation
+* **Firebase Connection:** Ensure JSON key is present and project config is correct
+* **PDF Errors:** Verify ReportLab installation, media directory permissions, and fonts
+* **Database Issues:** Apply migrations, check SQLite permissions, and activate virtual environment
 
-Advanced reporting with charts and analytics
+---
 
-🐛 Troubleshooting
-
-Common Issues:
-
-Firebase Connection: Ensure JSON key is present and project config is correct
-
-PDF Errors: Verify ReportLab installation, media directory permissions, and fonts
-
-Database Issues: Apply migrations, check SQLite permissions, and activate virtual environment
-
-📄 License
+## 📄 License
 
 This project is for educational purposes (hackathon MVP). Free to use and modify.
 
-🤝 Contributing
+---
 
-Fork the repository
+## 🤝 Contributing
 
-Create a feature branch
+1. Fork the repository
+2. Create a feature branch
+3. Commit changes
+4. Push to the branch
+5. Create a Pull Request
 
-Commit changes
+---
 
-Push to the branch
-
-Create a Pull Request
-
-Built with ❤️ for educational management
+**Built with ❤️ for educational management**
