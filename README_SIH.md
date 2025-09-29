@@ -1,96 +1,97 @@
 # Mini ERP for Education – SIH 2025 Pitch
 
-A lightweight, cloud-ready Student ERP that unifies Admissions, Fees, Hostel, and a predictive At‑Risk Dashboard. Built for rapid rollout in government and private institutions with minimal infra and maximum impact.
+A lightweight, cloud-ready Student ERP that unifies Admissions, Fees, Hostel, and a predictive At-Risk Dashboard. Built for rapid rollout in government and private institutions with minimal infrastructure and maximum impact.
 
 ---
 
-## Why this solution (Problem → Impact)
-- Fragmented spreadsheets and paper workflows slow down admissions, fee tracking, and hostel allocation.
-- No early-warning system for attendance, fees, and exam risk → higher dropouts.
-- High cost and complexity of traditional ERPs hinder adoption in smaller institutes.
+## Why this Solution? (Problem → Impact)
 
-Our Mini ERP solves these with a simple, secure, and scalable system that can be deployed in hours, not months.
+* **Problem:** Fragmented spreadsheets and paper workflows slow down admissions, fee tracking, and hostel allocation.
+* **Problem:** The lack of an early-warning system for attendance, fees, and exam risk leads to higher dropout rates.
+* **Problem:** The high cost and complexity of traditional ERPs hinder adoption in smaller institutes.
+
+**Our Mini ERP solves these challenges with a simple, secure, and scalable system that can be deployed in hours, not months.**
 
 ---
 
-## What’s unique (Key Differentiators)
-- Predictive At‑Risk Dashboard
-  - Flags students at risk based on attendance, overdue fees, and exam performance.
-  - Real-time updates via SSE; optional Firestore listeners to stream only deltas.
-- Low-cost, high-efficiency Firestore usage
-  - Cursor-based pagination; server-side validation of date ranges.
-  - Materialized metrics per student (monthly) to avoid collection scans.
-  - Aggregations (count) instead of bulk reads; optional caching on hot endpoints.
-- Production-ready now
-  - One-click deployment on Render with render.yaml; auto-migrations; WhiteNoise static.
-  - Clean .env configuration; Firebase Admin SDK via Secret Files.
-- Practical workflows that matter
-  - Admissions approval pipeline, hostel allocation, fee receipts (PDF), Excel exports.
-- Secure by design
-  - RBAC via Django groups, CSRF protection, email/notifications optional.
-- Extensible and standards-based
-  - Django REST + Firestore; can plug in BigQuery for analytics or a separate React/Flutter frontend.
+## What’s Unique? (Key Differentiators)
+
+* **Predictive At-Risk Dashboard:**
+
+  * Flags students at risk based on attendance, overdue fees, and exam performance.
+  * Uses real-time updates via SSE; optional Firestore listeners stream only deltas.
+* **Low-Cost, High-Efficiency Firestore Usage:**
+
+  * Employs cursor-based pagination and server-side validation to reduce costs.
+  * Uses materialized metrics per student to avoid expensive collection scans for the dashboard.
+  * Aggregations (`count`) reduce reads; optional caching is available on hot endpoints.
+* **Production-Ready (Cloud Deployment in Progress):**
+
+  * System designed for easy deployment on managed cloud services.
+  * Includes automated migrations and static file serving with WhiteNoise.
+  * Secure configuration using `.env` files and Firebase Admin SDK via environment/secret files.
+* **Practical Workflows that Matter:**
+
+  * Admissions approval pipeline, hostel allocation, PDF fee receipts, and Excel exports.
+* **Secure by Design:**
+
+  * Implements Role-Based Access Control (RBAC) via Django groups.
+  * Includes CSRF protection, HTTPS-only cookies, and SSL redirects.
+* **Extensible and Standards-Based:**
+
+  * The architecture (Django REST + Firestore) allows easy integration with other services like BigQuery for advanced analytics or a separate frontend framework (e.g., React/Flutter).
 
 ---
 
 ## Functional Highlights
-- Admissions:
-  - Application creation, review, approve/reject, status tracking.
-- Fees:
-  - Payments logging, receipt PDF (ReportLab/WeasyPrint), pending/overdue analytics.
-- Hostel:
-  - Requests, room allocation, occupancy stats.
-- Dashboard:
-  - At‑Risk students table; distribution analytics; live updates.
-- Exports:
-  - Excel exports for students/attendance/fees; styled and ready for reporting.
+
+* **Admissions:** Application creation, review, approve/reject, and status tracking.
+* **Fees:** Payments logging, receipt PDF generation (ReportLab/WeasyPrint), and pending/overdue analytics.
+* **Hostel:** Requests, room allocation, and occupancy stats.
+* **Dashboard:** At-Risk students table with distribution analytics and live updates.
+* **Exports:** Excel exports for students, attendance, and fees, styled for easy reporting.
 
 ---
 
-## Architecture (High level)
-- Backend: Django (Gunicorn) on Render
-- Data:
-  - Firestore for student operational data (attendance/fees/exams/notifications)
-  - PostgreSQL on Render for Django auth/session/admin
-- Realtime: SSE endpoints; optional Firestore snapshot listeners
-- Static: WhiteNoise (no separate CDN needed for MVP)
-- Secrets: Render Environment + Secret Files (Firebase Admin JSON)
+## Architecture (High-Level)
 
-This hybrid model balances developer speed, operating cost, and scale.
+* **Backend:** Django (Gunicorn) on local/dev environment.
+* **Data:**
+
+  * **Firestore** for student operational data (attendance, fees, exams, notifications).
+* **Realtime:** SSE endpoints with optional Firestore snapshot listeners.
+* **Static Assets:** WhiteNoise (no separate CDN needed for MVP).
+* **Secrets:** Managed securely via environment/secret files.
+
+This hybrid model balances developer speed, operating cost, and scalability.
 
 ---
 
 ## Security & Governance
-- Secrets via environment/secret files; no secrets in repo.
-- RBAC with Django groups (admin/teacher/accountant); superuser bypass for ops.
-- CSRF protection; secure proxy headers; HTTPS enforced on Render.
-- Optional email alerts; configurable SMTP.
+
+* **Secrets:** Stored securely via environment/secret files, never in the repository.
+* **RBAC:** Implemented with Django groups for distinct roles (admin, teacher, accountant).
+* **Protection:** Includes CSRF protection, secure proxy headers, and HTTPS enforcement.
+* **Alerts:** Optional email alerts via a configurable SMTP server.
 
 ---
 
 ## Cost & Performance Optimizations
-- Avoid full collection scans; enforce filters (student_id, date ranges) and hard limits.
-- Cursor-based pagination (no `offset`) to avoid billed skips.
-- Aggregation queries (count) where supported to reduce reads.
-- Materialized metrics/rollups to serve the dashboard in O(1) reads.
-- Optional Redis/short TTL caching on hot endpoints.
-- TTL auto-delete for old notifications/logs to control storage.
 
----
-
-## Deployment Readiness
-- render.yaml for web service (build/start/post-deploy migrate)
-- runtime.txt (Python 3.12)
-- requirements.txt includes dj-database-url, psycopg, Firestore libs, WhiteNoise
-- FIREBASE_ADMIN_SDK_PATH to a Secret File on Render
-
-Time-to-live: 30–45 minutes from repo to production.
+* **Data Reads:** Avoid full collection scans by enforcing filters (`student_id`, date ranges) and hard limits.
+* **Pagination:** Use cursor-based pagination to avoid billed skips.
+* **Queries:** Utilize aggregation queries (`count`) to reduce reads.
+* **Dashboard:** Use materialized metrics/rollups to serve dashboard data in O(1) reads.
+* **Caching:** Optional Redis/short TTL caching on hot endpoints.
+* **Storage:** TTL auto-delete for old notifications and logs to control storage costs.
 
 ---
 
 ## Demo (Quick Start)
-Local (Windows PowerShell):
-```pwsh path=null start=null
+
+**Local (Windows PowerShell):**
+
+```pwsh
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -99,47 +100,33 @@ Copy-Item .env.example .env
 python manage.py migrate
 python manage.py runserver
 ```
-Render (hosted): see README_RENDER.md for 5-step deploy.
+
+Cloud deployment is in progress; instructions will be updated once ready.
 
 ---
 
-## Impact (KPIs to track in pilots)
-- 30–50% reduction in admin time for admissions/hostel workflows
-- 10–20% improvement in fee recovery via timely alerts and summaries
-- 5–10% reduction in drop‑outs through early at‑risk interventions
-- Near‑zero vendor lock-in; runs on commodity infra
+## Impact (KPIs to Track in Pilots)
+
+* **Efficiency:** 30–50% reduction in admin time for admissions and hostel workflows.
+* **Fee Recovery:** 10–20% improvement in fee recovery via timely alerts and summaries.
+* **Retention:** 5–10% reduction in dropouts through early at-risk interventions.
+* **Flexibility:** Near-zero vendor lock-in; the solution runs on commodity infrastructure.
 
 ---
 
 ## Alignment with SIH 2025 Evaluation
-- Innovation: Predictive at‑risk + cost‑optimized Firestore patterns
-- Feasibility: Working code, instant deployment, minimal infra
-- Scalability: Horizontal by design; Firestore + Postgres; stateless app layer
-- Sustainability: Low operating cost; documented guardrails to keep bills down
-- User‑centric design: Simple flows for students and admins; exports for compliance
-- Completion: End‑to‑end flows implemented and deployable now
 
----
-
-<!-- ## Roadmap (Post‑SIH Enhancements)
-- Mobile app (Flutter) for students/faculty
-- Role‑based dashboards and multilingual UI (English/Hindi/regional)
-- SMS/WhatsApp alerts; parent portal
-- BigQuery analytics + scheduled reports to email
-- Attendance device integrations (QR/RFID) -->
-
----
-
-<!-- ## How to Evaluate Quickly (Judge Guide)
-- Step 1: Review README_RENDER.md and deploy on Render (10–15 min)
-- Step 2: Create superuser, log into /admin, explore groups (RBAC)
-- Step 3: Add a few attendance/fees records; watch At‑Risk Dashboard update
-- Step 4: Export fees/attendance to Excel; generate receipt PDF
-- Step 5: Inspect code structure: clean apps, security controls, and Firestore helpers -->
+* **Innovation:** Predictive at-risk dashboard and cost-optimized Firestore patterns.
+* **Feasibility:** Working code, instant local deployment, minimal infrastructure.
+* **Scalability:** Horizontal by design; a stateless app layer with Firestore and Postgres.
+* **Sustainability:** Low operating cost and documented guardrails to keep bills down.
+* **User-Centric Design:** Simple flows for students and admins, with data exports for compliance.
+* **Completion:** End-to-end flows are fully implemented and deployable locally now.
 
 ---
 
 ## Contact
-- Team: DataWeavers
-- Email: chaitanythakar851@gmail.com
-- Demo: https://erp-system-mvp.onrender.com/
+
+* **Team:** Data Weavers
+* **Email:** [chaitanythakar851@gmail.com](mailto:chaitanythakar851@gmail.com)
+* **Demo:** [https://mini-erp-web.onrender.com](https://mini-erp-web.onrender.com) [deployment in progress]
