@@ -1,7 +1,26 @@
-Django>=4.2.0,<5.0
-firebase-admin>=6.0.0
-reportlab>=4.0.0
+Django>=4.2,<5.1
+# Core
+python-dotenv>=1.0
+whitenoise>=6.6
+
+djangorestframework>=3.14
+django-cors-headers>=4.3
+
+# Firestore / Firebase
+firebase-admin>=6.5
+google-cloud-firestore>=2.14
+requests>=2.32
+
+# Server
+gunicorn>=21.2
+
+dj-database-url>=2.1
+psycopg[binary]>=3.1
+
+# Excel/PDF exports
+pandas>=2.2
+xlsxwriter>=3.2
+openpyxl>=3.1
+reportlab>=4.2
+Pillow>=10.3
 weasyprint>=60.0
-Pillow>=9.0.0
-python-dotenv>=1.0.0
-gunicorn>=21.2.0

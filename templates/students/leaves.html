@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}My Leaves{% endblock %}
+{% block content %}
+<h2 class="mb-3"><i class="bi bi-calendar2-week text-warning"></i> My Leaves</h2>
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white"><strong>Request Leave</strong></div>
+      <div class="card-body">
+        <form id="leaveForm">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">From</label>
+            <input class="form-control" type="date" id="start_date" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">To</label>
+            <input class="form-control" type="date" id="end_date" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Reason</label>
+            <textarea class="form-control" id="reason"></textarea>
+          </div>
+          <button class="btn btn-warning" type="submit">Submit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white"><strong>My Requests</strong></div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table align-middle" id="leaveTable">
+            <thead><tr><th>Dates</th><th>Reason</th><th>Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+(function(){
+  function getCookie(name) { const m = document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)'); return m ? m.pop() : ''; }
+  const csrftoken = getCookie('csrftoken');
+  async function load() {
+    const res = await fetch('/students/leaves/');
+    const json = await res.json();
+    const rows = (json.items||[]).map(d => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${d.start_date} - ${d.end_date}</td><td>${d.reason||''}</td><td><span class="badge ${d.status==='approved'?'bg-success':d.status==='rejected'?'bg-danger':'bg-secondary'}">${d.status}</span></td>`;
+      return tr;
+    });
+    const tb = document.querySelector('#leaveTable tbody');
+    tb.innerHTML = ''; rows.forEach(r => tb.appendChild(r));
+  }
+  document.getElementById('leaveForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const body = {
+      start_date: document.getElementById('start_date').value,
+      end_date: document.getElementById('end_date').value,
+      reason: document.getElementById('reason').value
+    };
+    const res = await fetch('/students/leaves/', { method:'POST', headers: { 'Content-Type':'application/json', 'X-CSRFToken': csrftoken }, body: JSON.stringify(body)});
+    if (res.ok) { alert('Submitted'); load(); } else { alert('Failed to submit'); }
+  });
+  load();
+})();
+</script>
+{% endblock %}

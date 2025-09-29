@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Manage Leaves{% endblock %}
+{% block content %}
+<h2 class="mb-3"><i class="bi bi-clipboard-check text-warning"></i> Manage Leaves</h2>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <div class="d-flex gap-2 mb-3">
+      <input id="filterStudent" class="form-control" placeholder="Filter by Student ID" style="max-width: 240px;" />
+      <button id="refreshBtn" class="btn btn-outline-secondary">Refresh</button>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle" id="leavesTable">
+        <thead><tr><th>Student</th><th>Dates</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+(function(){
+  function getCookie(name) { const m = document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)'); return m ? m.pop() : ''; }
+  const csrftoken = getCookie('csrftoken');
+  const tb = document.querySelector('#leavesTable tbody');
+  const filter = document.getElementById('filterStudent');
+  document.getElementById('refreshBtn').addEventListener('click', load);
+
+  async function load(){
+    const res = await fetch('/students/leaves/');
+    const json = await res.json();
+    let items = json.items || [];
+    const f = (filter.value || '').trim();
+    if (f) items = items.filter(i => (i.student_id||'').includes(f));
+    render(items);
+  }
+
+  function render(items){
+    tb.innerHTML = '';
+    items.forEach(d => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${d.student_id||''}</strong></td>
+        <td>${d.start_date} – ${d.end_date}</td>
+        <td>${d.reason||''}</td>
+        <td><span class="badge ${d.status==='approved'?'bg-success':d.status==='rejected'?'bg-danger':'bg-secondary'}">${d.status}</span></td>
+        <td>
+          <div class="btn-group btn-group-sm" role="group">
+            <button class="btn btn-success" data-action="approve">Approve</button>
+            <button class="btn btn-danger" data-action="reject">Reject</button>
+          </div>
+        </td>`;
+      tr.querySelector('[data-action="approve"]').addEventListener('click', ()=> updateStatus(d.id, 'approved'));
+      tr.querySelector('[data-action="reject"]').addEventListener('click', ()=> updateStatus(d.id, 'rejected'));
+      tb.appendChild(tr);
+    });
+  }
+
+  async function updateStatus(id, status){
+    const res = await fetch(`/students/leaves/${id}/`, { method:'PUT', headers:{ 'Content-Type':'application/json','X-CSRFToken':csrftoken }, body: JSON.stringify({ status }) });
+    if (res.ok) load(); else alert('Failed to update');
+  }
+
+  load();
+})();
+</script>
+{% endblock %}

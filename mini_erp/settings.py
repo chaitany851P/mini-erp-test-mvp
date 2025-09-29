@@ -25,12 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-r-%j-x0@et+^0$-lgo#8dr(0)n$#s45t$+wxi&uihuw9af-k3w'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-only-secret-change-me')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG', 'true').lower() in ['1', 'true', 'yes']
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -43,14 +43,20 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Our apps
+    'users',  # Custom user model - must be first
+    'applications',  # Leave and Hostel applications
+    'mini_erp',
     'admissions',
     'fees',
     'hostel',
     'dashboard',
+    'students',
+    'payments',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -88,6 +94,15 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Use DATABASE_URL if provided (Render/Heroku style), else fallback to sqlite
+DATABASE_URL = os.getenv('DATABASE_URL')
+if DATABASE_URL:
+    DATABASES['default'] = dj_database_url.parse(
+        DATABASE_URL,
+        conn_max_age=int(os.getenv('DB_CONN_MAX_AGE', '600')),
+        ssl_require=os.getenv('DB_SSL_REQUIRE', 'true').lower() in ['1', 'true', 'yes']
+    )
 
 
 # Password validation
@@ -127,15 +142,54 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+# WhiteNoise for serving static files in production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Firebase configuration
-FIREBASE_ADMIN_SDK_PATH = BASE_DIR / 'firebase-admin-sdk.json'
+# Use FIREBASE_ADMIN_SDK_PATH env var to point to your service account JSON
+FIREBASE_ADMIN_SDK_PATH = os.getenv('FIREBASE_ADMIN_SDK_PATH')
+if FIREBASE_ADMIN_SDK_PATH:
+    FIREBASE_ADMIN_SDK_PATH = Path(FIREBASE_ADMIN_SDK_PATH)
+else:
+    FIREBASE_ADMIN_SDK_PATH = BASE_DIR / 'firebase-admin-sdk.json'
+
+# Email configuration (used for alerts)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'true').lower() in ['1', 'true', 'yes']
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'noreply@example.com')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Custom User Model
+AUTH_USER_MODEL = 'users.User'
+
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
+
+# Cashfree configuration
+CASHFREE_ENV = os.getenv('CASHFREE_ENV', 'sandbox')
+CASHFREE_APP_ID = os.getenv('CASHFREE_APP_ID', '')
+CASHFREE_SECRET_KEY = os.getenv('CASHFREE_SECRET_KEY', '')
+CASHFREE_WEBHOOK_SECRET = os.getenv('CASHFREE_WEBHOOK_SECRET', '')
+
+# Production security (opt-in via .env)
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()]
+SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'false').lower() in ['1','true','yes']
+CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'false').lower() in ['1','true','yes']
+SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '0'))
+SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'false').lower() in ['1','true','yes']
+# Respect X-Forwarded-* headers from Render's proxy
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

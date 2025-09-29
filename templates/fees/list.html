@@ -49,7 +49,7 @@
                                 <span class="badge bg-info">{{ fee.fee_type }}</span>
                             </td>
                             <td>
-                                <strong class="text-success">${{ fee.amount }}</strong>
+<strong class="text-success">${{ fee.amount|floatformat:2 }}</strong>
                             </td>
                             <td>
                                 {% if fee.status == 'completed' %}
@@ -105,14 +105,7 @@
                 <div class="card-body text-center">
                     <i class="bi bi-check-circle display-6 text-success"></i>
                     <h4 class="mt-2">
-                        {% with completed_count=0 %}
-                            {% for fee in fees %}
-                                {% if fee.status == 'completed' %}
-                                    {% with completed_count=completed_count|add:1 %}{% endwith %}
-                                {% endif %}
-                            {% endfor %}
-                            {{ completed_count }}
-                        {% endwith %}
+                        {{ summary.completed|default:0 }}
                     </h4>
                     <p class="text-muted mb-0">Completed</p>
                 </div>
@@ -124,14 +117,7 @@
                 <div class="card-body text-center">
                     <i class="bi bi-clock-history display-6 text-warning"></i>
                     <h4 class="mt-2">
-                        {% with pending_count=0 %}
-                            {% for fee in fees %}
-                                {% if fee.status == 'pending' %}
-                                    {% with pending_count=pending_count|add:1 %}{% endwith %}
-                                {% endif %}
-                            {% endfor %}
-                            {{ pending_count }}
-                        {% endwith %}
+                        {{ summary.pending|default:0 }}
                     </h4>
                     <p class="text-muted mb-0">Pending</p>
                 </div>
@@ -143,14 +129,7 @@
                 <div class="card-body text-center">
                     <i class="bi bi-x-circle display-6 text-danger"></i>
                     <h4 class="mt-2">
-                        {% with failed_count=0 %}
-                            {% for fee in fees %}
-                                {% if fee.status == 'failed' %}
-                                    {% with failed_count=failed_count|add:1 %}{% endwith %}
-                                {% endif %}
-                            {% endfor %}
-                            {{ failed_count }}
-                        {% endwith %}
+                        {{ summary.failed|default:0 }}
                     </h4>
                     <p class="text-muted mb-0">Failed</p>
                 </div>
@@ -162,14 +141,7 @@
                 <div class="card-body text-center">
                     <i class="bi bi-cash-stack display-6 text-primary"></i>
                     <h4 class="mt-2">
-                        ${% with total_amount=0 %}
-                            {% for fee in fees %}
-                                {% if fee.status == 'completed' %}
-                                    {% with total_amount=total_amount|add:fee.amount %}{% endwith %}
-                                {% endif %}
-                            {% endfor %}
-                            {{ total_amount|floatformat:2 }}
-                        {% endwith %}
+${{ summary.total_paid|floatformat:2 }}
                     </h4>
                     <p class="text-muted mb-0">Total Paid</p>
                 </div>

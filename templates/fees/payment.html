@@ -24,6 +24,7 @@
                                 Student ID <span class="text-danger">*</span>
                             </label>
                             {{ form.student_id }}
+                            <div class="form-text">Enter Student ID and tab out to auto-fill name and email</div>
                             {% if form.student_id.errors %}
                                 <div class="invalid-feedback d-block">
                                     {{ form.student_id.errors.0 }}
@@ -226,11 +227,41 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Auto-format student ID to uppercase
+    // Auto-format student ID to uppercase and auto-fill details
     const studentIdField = document.querySelector('#{{ form.student_id.id_for_label }}');
+    const studentNameField = document.querySelector('#{{ form.student_name.id_for_label }}');
+    const studentEmailField = document.querySelector('#{{ form.student_email.id_for_label }}');
+
+    async function fetchStudentById(sid) {
+        if (!sid) return;
+        try {
+            const res = await fetch(`/admissions/api/student/${encodeURIComponent(sid)}/`);
+            if (res.ok) {
+                const data = await res.json();
+                if (studentNameField && !studentNameField.value) {
+                    studentNameField.value = data.student_name || '';
+                }
+                if (studentEmailField && !studentEmailField.value) {
+                    studentEmailField.value = data.student_email || '';
+                }
+            }
+        } catch (_) { /* ignore */ }
+    }
+
     if (studentIdField) {
         studentIdField.addEventListener('input', function() {
             this.value = this.value.toUpperCase();
+        });
+        studentIdField.addEventListener('blur', function() {
+            const sid = this.value.trim();
+            if (sid) fetchStudentById(sid);
+        });
+        // Also try on paste
+        studentIdField.addEventListener('paste', function() {
+            setTimeout(()=>{
+                const sid = studentIdField.value.trim();
+                if (sid) fetchStudentById(sid);
+            }, 0);
         });
     }
 });

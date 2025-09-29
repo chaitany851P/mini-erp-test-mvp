@@ -1,0 +1,1 @@
+# Required for Django template tags package

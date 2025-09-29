@@ -18,15 +18,25 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import home_view
+from django.shortcuts import redirect
+from .views import home_view, signup_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', home_view, name='home'),
+    path('', lambda request: redirect('login'), name='root'),  # Redirect to login
+    path('home/', home_view, name='home'),
+    
+    # Custom authentication system
+    path('', include('users.urls')),
+    
+    # Keep existing app URLs
     path('admissions/', include('admissions.urls')),
     path('fees/', include('fees.urls')),
     path('hostel/', include('hostel.urls')),
     path('dashboard/', include('dashboard.urls')),
+    path('students/', include('students.urls')),
+    path('payments/', include('payments.urls')),
+    path('applications/', include('applications.urls')),
 ]
 
 # Serve media files during development

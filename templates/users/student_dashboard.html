@@ -1,0 +1,682 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - Mini ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-mortarboard me-2"></i>Student Dashboard</h1>
+    <div class="badge bg-success px-3 py-2 fs-6">
+        <i class="bi bi-person me-1"></i>{{ user.student_id }}
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-success border-left-success">
+            <i class="bi bi-check-circle me-2"></i>
+            <strong>Welcome back, {{ user.get_display_name }}!</strong> 
+            Access your student services and information below.
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card dashboard-card h-100 hover-shadow">
+            <div class="card-header bg-gradient-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-calendar-x me-2"></i>Leave Applications</span>
+                    <span id="leaveCount" class="badge bg-light text-dark">0</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Apply for leave and check application status.</p>
+                <div id="leaveStatus" class="mb-3">
+                    <small class="text-muted">Loading...</small>
+                </div>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" onclick="openLeaveModal()">
+                        <i class="bi bi-plus me-2"></i>Apply for Leave
+                    </button>
+                    <a href="{% url 'students:leaves_page' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-list me-2"></i>My Applications
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card dashboard-card h-100 hover-shadow">
+            <div class="card-header bg-gradient-success text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-house-door me-2"></i>Hostel Services</span>
+                    <span id="hostelStatus" class="badge bg-light text-dark">N/A</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Apply for hostel accommodation and manage bookings.</p>
+                <div id="hostelInfo" class="mb-3">
+                    <small class="text-muted">Loading...</small>
+                </div>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success" onclick="openHostelModal()">
+                        <i class="bi bi-plus me-2"></i>Apply for Hostel
+                    </button>
+                    <a href="{% url 'hostel:allocations' %}" class="btn btn-outline-success">
+                        <i class="bi bi-house me-2"></i>My Room Status
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card dashboard-card h-100 hover-shadow">
+            <div class="card-header bg-gradient-warning text-dark">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-cash-coin me-2"></i>Fee Management</span>
+                    <span id="feeStatusBadge" class="badge bg-secondary text-light">Checking...</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="card-text">View and pay your fees online.</p>
+                <div id="feeStatus" class="mb-3">
+                    <small class="text-muted">Loading fee status...</small>
+                </div>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'fees:payment' %}" class="btn btn-warning">
+                        <i class="bi bi-credit-card me-2"></i>Pay Fees
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Risk Summary Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-activity me-2"></i>My Academic Risk Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h2 id="attendancePercent" class="display-4 mb-0">--</h2>
+                            <p class="text-muted mb-0">Attendance %</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h2 id="riskLevel" class="display-4 mb-0">--</h2>
+                            <p class="text-muted mb-0">Risk Level</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div id="riskReasons" class="list-group list-group-flush">
+                            <div class="list-group-item">Loading risk analysis...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profile Information -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-person-circle me-2"></i>Profile Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <p><strong>Student ID:</strong> {{ user.student_id }}</p>
+                        <p><strong>Email:</strong> {{ user.email }}</p>
+                        <p><strong>Phone:</strong> {{ user.phone|default:"Not provided" }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p><strong>Date of Birth:</strong> {{ user.date_of_birth|default:"Not provided" }}</p>
+                        <p><strong>Account Status:</strong> 
+                            {% if user.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Email Verified:</strong> 
+                            {% if user.is_email_verified %}
+                                <span class="badge bg-success">Verified</span>
+                            {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'profile' %}" class="btn btn-primary">
+                        <i class="bi bi-pencil me-2"></i>Update Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-bell me-2"></i>Quick Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Leave Applications:</span>
+                    <span class="badge bg-secondary">0</span>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Hostel Status:</span>
+                    <span class="badge bg-secondary">Not Applied</span>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Fee Status:</span>
+                    <span class="badge bg-warning">Pending</span>
+                </div>
+                <hr>
+                <small class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    More features coming soon!
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leave Application Modal -->
+<div class="modal fade" id="leaveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-calendar-x me-2"></i>Apply for Leave</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="leaveForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="leaveStart" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="leaveStart" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="leaveEnd" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="leaveEnd" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="leaveReason" class="form-label">Reason</label>
+                        <select class="form-select" id="leaveReason" required>
+                            <option value="">Select reason...</option>
+                            <option value="Medical">Medical</option>
+                            <option value="Family Emergency">Family Emergency</option>
+                            <option value="Personal">Personal</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="leaveDetails" class="form-label">Additional Details</label>
+                        <textarea class="form-control" id="leaveDetails" rows="3" placeholder="Provide additional details..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Hostel Application Modal -->
+<div class="modal fade" id="hostelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-house-door me-2"></i>Apply for Hostel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="hostelForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="roomType" class="form-label">Room Type</label>
+                        <select class="form-select" id="roomType" required>
+                            <option value="">Select room type...</option>
+                            <option value="single">Single Room</option>
+                            <option value="double">Double Sharing</option>
+                            <option value="triple">Triple Sharing</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="hostelPreferences" class="form-label">Preferences</label>
+                        <textarea class="form-control" id="hostelPreferences" rows="3" placeholder="Any specific preferences (floor, location, etc.)"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="studentPhone" class="form-label">Contact Phone</label>
+                        <input type="tel" class="form-control" id="studentPhone" value="{{ user.phone }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Submit Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.hover-shadow {
+    transition: all 0.3s ease;
+}
+
+.hover-shadow:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(45deg, #0d6efd, #4dabf7);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(45deg, #198754, #51cf66);
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(45deg, #ffc107, #ffe066);
+}
+
+.dashboard-card {
+    border: none;
+    overflow: hidden;
+}
+
+.display-4 {
+    font-weight: 700;
+}
+
+.card-header {
+    font-weight: 600;
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.list-group-item {
+    border: none;
+    padding: 0.5rem 0;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    let studentData = {
+        leaves: [],
+        hostel: null,
+        fees: [],
+        riskSummary: null
+    };
+    
+    // Load student data on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadStudentData();
+        setupForms();
+    });
+    
+    async function loadStudentData() {
+        try {
+            // Load leave applications - try Firebase first, fallback to local
+            try {
+                const leaveRes = await fetch('/students/leaves/');
+                if (leaveRes.ok) {
+                    const leaveData = await leaveRes.json();
+                    studentData.leaves = leaveData.items || [];
+                    updateLeaveCard();
+                } else {
+                    throw new Error('Firebase unavailable');
+                }
+            } catch (e) {
+                console.log('Using local leave endpoint:', e.message);
+                const leaveRes = await fetch('/applications/leaves/');
+                if (leaveRes.ok) {
+                    const leaveData = await leaveRes.json();
+                    studentData.leaves = leaveData.items || [];
+                    updateLeaveCard();
+                }
+            }
+            
+            // Load hostel applications - try Firebase first, fallback to local
+            try {
+                const hostelRes = await fetch('/students/hostel-applications/');
+                if (hostelRes.ok) {
+                    const hostelData = await hostelRes.json();
+                    studentData.hostel = hostelData.items || [];
+                    updateHostelCard();
+                } else {
+                    throw new Error('Firebase unavailable');
+                }
+            } catch (e) {
+                console.log('Using local hostel endpoint:', e.message);
+                const hostelRes = await fetch('/applications/hostel/');
+                if (hostelRes.ok) {
+                    const hostelData = await hostelRes.json();
+                    studentData.hostel = hostelData.items || [];
+                    updateHostelCard();
+                }
+            }
+            
+            // Load fee status (student-only cached endpoint)
+            try {
+                const feeRes = await fetch('/students/my/fees/');
+                if (feeRes.ok) {
+                    const feeData = await feeRes.json();
+                    studentData.fees = feeData.items || [];
+                    updateFeeCard();
+                } else {
+                    updateFeeCard([]);
+                }
+            } catch (e) {
+                console.log('Fee data not available:', e);
+                updateFeeCard([]);
+            }
+            
+            // Load risk summary (student-only cached endpoint)
+            try {
+                const riskRes = await fetch('/dashboard/data/my/');
+                if (riskRes.ok) {
+                    const riskData = await riskRes.json();
+                    studentData.riskSummary = riskData.item || riskData;
+                    updateRiskCard();
+                } else {
+                    // Default summary if not available
+                    studentData.riskSummary = {
+                        attendance_percent: 'N/A',
+                        risk_level: 'Unknown',
+                        at_risk: false,
+                        reasons: ['Data not available']
+                    };
+                    updateRiskCard();
+                }
+            } catch (e) {
+                console.log('Risk data not available:', e);
+                // Show default student risk summary
+                studentData.riskSummary = {
+                    attendance_percent: 'N/A',
+                    risk_level: 'Unknown',
+                    at_risk: false,
+                    reasons: ['Data not available']
+                };
+                updateRiskCard();
+                document.getElementById('riskReasons').innerHTML = '<div class="list-group-item text-muted">⚠️ Risk analysis temporarily unavailable</div>';
+            }
+            
+        } catch (error) {
+            console.error('Error loading student data:', error);
+        }
+    }
+    
+    function updateLeaveCard() {
+        const count = studentData.leaves.length;
+        document.getElementById('leaveCount').textContent = count;
+        
+        const statusDiv = document.getElementById('leaveStatus');
+        if (count === 0) {
+            statusDiv.innerHTML = '<small class="text-success">✅ No leave applications</small>';
+        } else {
+            const pending = studentData.leaves.filter(l => l.status === 'pending').length;
+            const approved = studentData.leaves.filter(l => l.status === 'approved').length;
+            
+            statusDiv.innerHTML = `
+                <small class="text-info">📋 ${pending} pending, ${approved} approved</small>
+            `;
+        }
+    }
+    
+    function updateHostelCard() {
+        const hostelApplications = studentData.hostel;
+        const statusSpan = document.getElementById('hostelStatus');
+        const infoDiv = document.getElementById('hostelInfo');
+        
+        if (hostelApplications.length === 0) {
+            statusSpan.textContent = 'Not Applied';
+            statusSpan.className = 'badge bg-light text-dark';
+            infoDiv.innerHTML = '<small class="text-muted">🏠 No hostel application submitted</small>';
+        } else {
+            const latest = hostelApplications[0];
+            statusSpan.textContent = latest.status || 'Pending';
+            
+            if (latest.status === 'approved') {
+                statusSpan.className = 'badge bg-success text-white';
+                infoDiv.innerHTML = '<small class="text-success">✅ Hostel approved!</small>';
+            } else if (latest.status === 'rejected') {
+                statusSpan.className = 'badge bg-danger text-white';
+                infoDiv.innerHTML = '<small class="text-danger">❌ Application rejected</small>';
+            } else {
+                statusSpan.className = 'badge bg-warning text-dark';
+                infoDiv.innerHTML = '<small class="text-warning">⏳ Application under review</small>';
+            }
+        }
+    }
+    
+    function updateFeeCard(fees = null) {
+        const feeData = fees || studentData.fees || [];
+        const statusBadge = document.getElementById('feeStatusBadge');
+        const statusDiv = document.getElementById('feeStatus');
+        
+        if (feeData.length === 0) {
+            statusBadge.textContent = 'No Fees';
+            statusBadge.className = 'badge bg-success text-white';
+            statusDiv.innerHTML = '<small class="text-success">✅ No pending fees</small>';
+            return;
+        }
+        
+        const pendingFees = feeData.filter(f => f.status !== 'completed' && f.status !== 'paid');
+        const overdueFees = feeData.filter(f => {
+            const today = new Date().toISOString().split('T')[0];
+            return f.status !== 'completed' && f.status !== 'paid' && f.due_date && f.due_date < today;
+        });
+        
+        if (overdueFees.length > 0) {
+            statusBadge.textContent = 'Overdue';
+            statusBadge.className = 'badge bg-danger text-white';
+            statusDiv.innerHTML = `<small class="text-danger">⚠️ ${overdueFees.length} overdue fee(s)</small>`;
+        } else if (pendingFees.length > 0) {
+            statusBadge.textContent = 'Pending';
+            statusBadge.className = 'badge bg-warning text-dark';
+            statusDiv.innerHTML = `<small class="text-warning">💳 ${pendingFees.length} pending fee(s)</small>`;
+        } else {
+            statusBadge.textContent = 'Paid';
+            statusBadge.className = 'badge bg-success text-white';
+            statusDiv.innerHTML = '<small class="text-success">✅ All fees up to date</small>';
+        }
+    }
+    
+    function updateRiskCard() {
+        if (!studentData.riskSummary) return;
+        
+        const risk = studentData.riskSummary;
+        
+        // Update attendance
+        const attendanceEl = document.getElementById('attendancePercent');
+        attendanceEl.textContent = (risk.attendance_percent || 0) + '%';
+        attendanceEl.className = `display-4 mb-0 ${
+            risk.attendance_percent >= 75 ? 'text-success' : 
+            risk.attendance_percent >= 50 ? 'text-warning' : 'text-danger'
+        }`;
+        
+        // Update risk level
+        const riskEl = document.getElementById('riskLevel');
+        riskEl.textContent = risk.risk_level || 'Low';
+        riskEl.className = `display-4 mb-0 ${
+            risk.risk_level === 'High' ? 'text-danger' :
+            risk.risk_level === 'Medium' ? 'text-warning' : 'text-success'
+        }`;
+        
+        // Update reasons
+        const reasonsEl = document.getElementById('riskReasons');
+        const reasons = risk.reasons || [];
+        
+        if (reasons.length === 0) {
+            reasonsEl.innerHTML = '<div class="list-group-item text-success">✅ No risk factors identified</div>';
+        } else {
+            reasonsEl.innerHTML = reasons.map(reason => 
+                `<div class="list-group-item">⚠️ ${reason}</div>`
+            ).join('');
+        }
+    }
+    
+    function setupForms() {
+        // Leave form submission
+        document.getElementById('leaveForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                start_date: document.getElementById('leaveStart').value,
+                end_date: document.getElementById('leaveEnd').value,
+                reason: document.getElementById('leaveReason').value + ': ' + document.getElementById('leaveDetails').value
+            };
+            
+            try {
+            // Get CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                             document.querySelector('input[name=csrfmiddlewaretoken]')?.value ||
+                             '{{ csrf_token }}';
+                             
+            // Try Firebase first, fallback to local endpoint
+            let response;
+            try {
+                response = await fetch('/students/leaves/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(formData)
+                });
+                if (!response.ok) {
+                    throw new Error('Firebase endpoint failed');
+                }
+            } catch (e) {
+                console.log('Using local leave endpoint for submission:', e.message);
+                response = await fetch('/applications/leaves/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(formData)
+                });
+            }
+                
+                if (response.ok) {
+                    alert('✅ Leave application submitted successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('leaveModal')).hide();
+                    loadStudentData(); // Refresh data
+                } else {
+                    alert('❌ Error submitting leave application');
+                }
+            } catch (error) {
+                alert('❌ Network error: ' + error.message);
+            }
+        });
+        
+        // Hostel form submission
+        document.getElementById('hostelForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                student_name: '{{ user.get_display_name }}',
+                student_email: '{{ user.email }}',
+                student_phone: document.getElementById('studentPhone').value,
+                room_type: document.getElementById('roomType').value,
+                preferences: document.getElementById('hostelPreferences').value
+            };
+            
+            try {
+            // Get CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                             document.querySelector('input[name=csrfmiddlewaretoken]')?.value ||
+                             '{{ csrf_token }}';
+                             
+            // Try Firebase first, fallback to local endpoint
+            let response;
+            try {
+                response = await fetch('/students/hostel-applications/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(formData)
+                });
+                if (!response.ok) {
+                    throw new Error('Firebase endpoint failed');
+                }
+            } catch (e) {
+                console.log('Using local hostel endpoint for submission:', e.message);
+                response = await fetch('/applications/hostel/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(formData)
+                });
+            }
+                
+                if (response.ok) {
+                    alert('✅ Hostel application submitted successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('hostelModal')).hide();
+                    loadStudentData(); // Refresh data
+                } else {
+                    alert('❌ Error submitting hostel application');
+                }
+            } catch (error) {
+                alert('❌ Network error: ' + error.message);
+            }
+        });
+    }
+    
+    // Global functions for modal opening
+    window.openLeaveModal = function() {
+        // Set minimum date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('leaveStart').setAttribute('min', today);
+        document.getElementById('leaveEnd').setAttribute('min', today);
+        
+        new bootstrap.Modal(document.getElementById('leaveModal')).show();
+    };
+    
+    window.openHostelModal = function() {
+        new bootstrap.Modal(document.getElementById('hostelModal')).show();
+    };
+    
+    // Auto-refresh data every 30 seconds
+    setInterval(loadStudentData, 30000);
+})();
+</script>
+{% endblock %}

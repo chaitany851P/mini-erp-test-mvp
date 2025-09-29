@@ -148,6 +148,95 @@
     </div>
 </div>
 
+<!-- At-Risk Students -->
+<div class="row mb-5">
+  <div class="col-12">
+    <div class="card shadow">
+      <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="bi bi-exclamation-triangle text-danger"></i> At-Risk Students
+        </h5>
+        <div class="d-flex gap-2 align-items-center">
+          <input id="filterStudentId" class="form-control form-control-sm" placeholder="Student ID filter" style="width: 200px;" />
+          <input id="filterAttendance" class="form-control form-control-sm" placeholder="Min Attendance % (e.g. 75)" style="width: 220px;" />
+          <button id="applyFilters" class="btn btn-sm btn-outline-primary">Apply</button>
+          <button id="exportCsv" class="btn btn-sm btn-outline-secondary">Export CSV</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row g-3 mb-3">
+          <div class="col-md-3"><input id="rangeFrom" type="date" class="form-control form-control-sm" placeholder="From" /></div>
+          <div class="col-md-3"><input id="rangeTo" type="date" class="form-control form-control-sm" placeholder="To" /></div>
+          <div class="col-md-6 text-end">
+            <button id="applyDate" class="btn btn-sm btn-outline-secondary">Apply Date Range</button>
+            <button id="exportJson" class="btn btn-sm btn-outline-dark ms-2">Download JSON</button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-striped align-middle" id="atRiskTable">
+            <thead>
+              <tr>
+                <th>Student ID</th>
+                <th>Attendance</th>
+                <th>Overdue Fees</th>
+                <th>Failing Grades</th>
+                <th>Reasons</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+        <small class="text-muted">Auto-refreshes in real-time via SSE.</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Advanced Analytics -->
+<div class="row mb-5" id="analyticsSection">
+  <div class="col-12">
+    <div class="card shadow">
+      <div class="card-header bg-light">
+        <h5 class="mb-0"><i class="bi bi-graph-up-arrow text-primary"></i> Analytics</h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="card h-100">
+              <div class="card-header bg-white"><strong>Attendance Distribution</strong></div>
+              <div class="card-body"><canvas id="attendanceChart" height="140"></canvas></div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card h-100">
+              <div class="card-header bg-white"><strong>Fees Status</strong></div>
+              <div class="card-body"><canvas id="feesStatusChart" height="140"></canvas></div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card h-100">
+              <div class="card-header bg-white"><strong>Fees Collected Over Time</strong></div>
+              <div class="card-body"><canvas id="feesLineChart" height="140"></canvas></div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card h-100">
+              <div class="card-header bg-white"><strong>Exam Grades Distribution</strong></div>
+              <div class="card-body"><canvas id="examChart" height="140"></canvas></div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="alert alert-info mb-0">
+              <i class="bi bi-info-circle"></i> Analytics respect the date range and student filters above.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Quick Actions and System Health -->
 <div class="row mb-5">
     <div class="col-lg-8 mb-4">
@@ -380,4 +469,214 @@
     font-weight: 700;
 }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function() {
+  const tableBody = document.querySelector('#atRiskTable tbody');
+  const studentIdInput = document.getElementById('filterStudentId');
+  const attendanceInput = document.getElementById('filterAttendance');
+  const applyBtn = document.getElementById('applyFilters');
+  const exportBtn = document.getElementById('exportCsv');
+  const exportJsonBtn = document.getElementById('exportJson');
+  const applyDateBtn = document.getElementById('applyDate');
+  const fromInput = document.getElementById('rangeFrom');
+  const toInput = document.getElementById('rangeTo');
+
+  let lastItems = [];
+  function renderRows(items) {
+    lastItems = items || [];
+    tableBody.innerHTML = '';
+    items.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${item.student_id}</td>
+        <td>${item.attendance_percent}%</td>
+        <td>${item.overdue_fees ? '<span class="badge bg-danger">Yes</span>' : '<span class="badge bg-success">No</span>'}</td>
+        <td>${item.failing_grades ? '<span class="badge bg-danger">Yes</span>' : '<span class="badge bg-success">No</span>'}</td>
+        <td>${(item.reasons || []).join(', ')}</td>
+      `;
+      tableBody.appendChild(tr);
+    });
+  }
+
+  let source;
+  function connectStream() {
+    if (source) source.close();
+    const sid = encodeURIComponent(studentIdInput.value || '');
+    const thr = encodeURIComponent(attendanceInput.value || '75');
+    const from = encodeURIComponent(fromInput.value || '');
+    const to = encodeURIComponent(toInput.value || '');
+    const url = `/dashboard/at-risk/stream/?student_id=${sid}&attendance_threshold=${thr}&from=${from}&to=${to}`;
+    source = new EventSource(url);
+    source.addEventListener('at_risk', (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        renderRows(data.items || []);
+      } catch (err) { /* ignore */ }
+    });
+    source.onerror = () => {
+      // backoff reconnect
+      if (source) source.close();
+      setTimeout(connectStream, 3000);
+    };
+  }
+
+  applyBtn.addEventListener('click', function() {
+    connectStream();
+    loadAnalytics();
+  });
+  applyDateBtn.addEventListener('click', function() {
+    connectStream();
+    loadAnalytics();
+  });
+
+  exportBtn.addEventListener('click', function() {
+    const rows = lastItems.map(i => [
+      i.student_id,
+      i.attendance_percent,
+      i.overdue_fees ? 'Yes' : 'No',
+      i.failing_grades ? 'Yes' : 'No',
+      (i.reasons || []).join(' | ')
+    ]);
+    const header = ['Student ID','Attendance %','Overdue Fees','Failing Grades','Reasons'];
+    const csv = [header, ...rows].map(r => r.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(',')).join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'at_risk_students.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Initial fetch to render immediately
+  async function initialLoad() {
+    const sid = encodeURIComponent(studentIdInput.value || '');
+    const thr = encodeURIComponent(attendanceInput.value || '75');
+    const from = encodeURIComponent(fromInput.value || '');
+    const to = encodeURIComponent(toInput.value || '');
+    const res = await fetch(`/dashboard/at-risk/?student_id=${sid}&attendance_threshold=${thr}&from=${from}&to=${to}`);
+    const json = await res.json();
+    renderRows(json.items || []);
+    connectStream();
+  }
+
+  // Charts
+  // Simple donut chart: Risk vs Safe
+  const riskCtx = document.createElement('canvas');
+  riskCtx.id = 'riskChart';
+  const riskCard = document.querySelector('.row.mb-5');
+  if (riskCard) {
+    const container = document.createElement('div');
+    container.className = 'card shadow mb-5';
+    container.innerHTML = '<div class="card-header bg-light"><h5 class="mb-0"><i class="bi bi-pie-chart text-danger"></i> Risk Overview</h5></div>';
+    const body = document.createElement('div');
+    body.className = 'card-body';
+    body.appendChild(riskCtx);
+    container.appendChild(body);
+    riskCard.parentNode.insertBefore(container, riskCard.nextSibling);
+  }
+
+  let riskChart;
+  function updateRiskChart() {
+    const risk = lastItems.length;
+    // We don't know safe count; show only risk count; can compute later from total students
+    const data = {
+      labels: ['At-Risk','Others'],
+      datasets: [{ data: [risk, Math.max(0, 10 - risk)], backgroundColor: ['#dc3545','#6c757d'] }]
+    };
+    if (riskChart) { riskChart.data = data; riskChart.update(); return; }
+    riskChart = new Chart(document.getElementById('riskChart'), { type: 'doughnut', data });
+  }
+
+  const originalRender = renderRows;
+  renderRows = function(items) {
+    originalRender(items);
+    updateRiskChart();
+  }
+
+  // Analytics fetch and stream
+  let analyticsSource;
+  let analyticsData = { analytics: {} };
+
+  function renderAnalytics(analytics) {
+    // Attendance Distribution (bar)
+    const attLabels = Object.keys(analytics.attendance_distribution || {});
+    const attData = Object.values(analytics.attendance_distribution || {});
+    attendanceChartInst?.destroy?.();
+    attendanceChartInst = new Chart(document.getElementById('attendanceChart'), {
+      type: 'bar',
+      data: { labels: attLabels, datasets: [{ label: 'Students', data: attData, backgroundColor: '#0d6efd' }] },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    // Fees Status (doughnut)
+    const fs = analytics.fees || {};
+    const fsLabels = Object.keys(fs.status_counts || {});
+    const fsValues = Object.values(fs.status_counts || {});
+    feesStatusChartInst?.destroy?.();
+    feesStatusChartInst = new Chart(document.getElementById('feesStatusChart'), {
+      type: 'doughnut',
+      data: { labels: fsLabels, datasets: [{ data: fsValues, backgroundColor: ['#198754','#ffc107','#dc3545','#6c757d'] }] },
+      options: { responsive: true }
+    });
+
+    // Fees Over Time (line)
+    const ts = (fs.collected_timeseries || []).map(p => ({ x: p.date, y: p.amount }));
+    feesLineChartInst?.destroy?.();
+    feesLineChartInst = new Chart(document.getElementById('feesLineChart'), {
+      type: 'line',
+      data: { datasets: [{ label: 'Collected', data: ts, borderColor: '#198754', backgroundColor: 'rgba(25,135,84,.2)', fill: true, tension: .3 }] },
+      options: { parsing: false, scales: { x: { type: 'time', time: { unit: 'day' }}, y: { beginAtZero: true } } }
+    });
+
+    // Exams Distribution (bar)
+    const exLabels = Object.keys(analytics.exams_distribution || {});
+    const exValues = Object.values(analytics.exams_distribution || {});
+    examChartInst?.destroy?.();
+    examChartInst = new Chart(document.getElementById('examChart'), {
+      type: 'bar',
+      data: { labels: exLabels, datasets: [{ label: 'Exams', data: exValues, backgroundColor: '#fd7e14' }] },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+  }
+
+  function connectAnalyticsStream() {
+    if (analyticsSource) analyticsSource.close();
+    const sid = encodeURIComponent(studentIdInput.value || '');
+    const from = encodeURIComponent(fromInput.value || '');
+    const to = encodeURIComponent(toInput.value || '');
+    analyticsSource = new EventSource(`/dashboard/analytics/stream/?student_id=${sid}&from=${from}&to=${to}`);
+    analyticsSource.addEventListener('analytics', (e) => {
+      try { analyticsData = JSON.parse(e.data); renderAnalytics(analyticsData.analytics || {}); } catch (_) {}
+    });
+    analyticsSource.onerror = () => { analyticsSource?.close?.(); setTimeout(connectAnalyticsStream, 3000); };
+  }
+
+  async function loadAnalytics() {
+    const sid = encodeURIComponent(studentIdInput.value || '');
+    const from = encodeURIComponent(fromInput.value || '');
+    const to = encodeURIComponent(toInput.value || '');
+    const res = await fetch(`/dashboard/analytics/?student_id=${sid}&from=${from}&to=${to}`);
+    analyticsData = await res.json();
+    renderAnalytics(analyticsData.analytics || {});
+    connectAnalyticsStream();
+  }
+
+  // Exports
+  exportJsonBtn.addEventListener('click', function() {
+    const blob = new Blob([JSON.stringify(analyticsData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'analytics.json'; a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  initialLoad();
+  loadAnalytics();
+})();
+</script>
 {% endblock %}

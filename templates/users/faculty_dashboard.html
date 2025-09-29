@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Faculty Dashboard - Mini ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-person-badge me-2"></i>Faculty Dashboard</h1>
+    <div class="badge bg-warning text-dark px-3 py-2 fs-6">
+        <i class="bi bi-mortarboard me-1"></i>Faculty Member
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card stat-card student">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="text-success">{{ students_count }}</h3>
+                        <p class="mb-0">Total Students</p>
+                    </div>
+                    <i class="bi bi-people fs-1 text-success opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card stat-card pending">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="text-warning">0</h3>
+                        <p class="mb-0">Pending Reviews</p>
+                    </div>
+                    <i class="bi bi-hourglass-split fs-1 text-warning opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card dashboard-card h-100">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-people me-2"></i>Student Management
+            </div>
+            <div class="card-body">
+                <p class="card-text">Access student information and records.</p>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" disabled>
+                        <i class="bi bi-list me-2"></i>View Students
+                    </button>
+                    <button class="btn btn-outline-primary" disabled>
+                        <i class="bi bi-file-earmark me-2"></i>Student Reports
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card dashboard-card h-100">
+            <div class="card-header bg-info text-white">
+                <i class="bi bi-person-circle me-2"></i>My Profile
+            </div>
+            <div class="card-body">
+                <p class="card-text">Update your profile and account settings.</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'profile' %}" class="btn btn-outline-info">
+                        <i class="bi bi-person me-2"></i>View Profile
+                    </a>
+                    <button class="btn btn-outline-info" disabled>
+                        <i class="bi bi-gear me-2"></i>Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Welcome to the Faculty Dashboard!</strong> 
+            This dashboard provides access to student management tools and reports. 
+            More features will be available soon.
+        </div>
+    </div>
+</div>
+{% endblock %}

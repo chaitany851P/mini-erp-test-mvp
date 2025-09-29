@@ -1,0 +1,946 @@
+{% extends 'base.html' %}
+{% block title %}Predictive Dashboard - Mini ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h2 class="mb-0"><i class="bi bi-activity text-danger"></i> Predictive Intervention</h2>
+    <p class="text-muted mb-0">Real-time student risk flags, analytics, and alerts</p>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
+      <i class="bi bi-funnel"></i> Advanced Filters
+    </button>
+    <button id="refreshBtn" class="btn btn-sm btn-outline-primary">
+      <i class="bi bi-arrow-clockwise"></i> Refresh
+    </button>
+  </div>
+</div>
+
+<!-- Advanced Filters Panel -->
+<div class="collapse mb-4" id="advancedFilters">
+  <div class="card modern-card">
+    <div class="card-header bg-gradient-info text-white">
+      <h6 class="mb-0"><i class="bi bi-search me-2"></i>Advanced Search & Filters</h6>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <!-- Search Bar -->
+        <div class="col-md-6">
+          <label for="globalSearch" class="form-label fw-semibold">Global Search</label>
+          <div class="search-modern">
+            <input type="text" id="globalSearch" class="form-control" placeholder="Search students, IDs, or reasons...">
+            <i class="bi bi-search search-icon"></i>
+          </div>
+        </div>
+        
+        <!-- Student ID Filter -->
+        <div class="col-md-3">
+          <label for="studentFilter" class="form-label fw-semibold">Student ID</label>
+          <input id="studentFilter" class="form-control" placeholder="Enter Student ID">
+        </div>
+        
+        <!-- Risk Level Filter -->
+        <div class="col-md-3">
+          <label for="riskFilter" class="form-label fw-semibold">Risk Level</label>
+          <select id="riskFilter" class="form-select">
+            <option value="">All Levels</option>
+            <option value="High">🔴 High Risk</option>
+            <option value="Medium">🟡 Medium Risk</option>
+            <option value="Low">🟢 Low Risk</option>
+          </select>
+        </div>
+        
+        <!-- Attendance Range -->
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Attendance Range</label>
+          <div class="d-flex gap-2 align-items-center">
+            <input type="number" id="attendanceMin" class="form-control" placeholder="Min %" min="0" max="100">
+            <span class="text-muted">to</span>
+            <input type="number" id="attendanceMax" class="form-control" placeholder="Max %" min="0" max="100">
+          </div>
+        </div>
+        
+        <!-- Risk Factors -->
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Risk Factors</label>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="filterOverdueFees">
+            <label class="form-check-label" for="filterOverdueFees">
+              💰 Overdue Fees
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="filterFailingGrades">
+            <label class="form-check-label" for="filterFailingGrades">
+              📚 Failing Grades
+            </label>
+          </div>
+        </div>
+        
+        <!-- Date Range -->
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Date Range</label>
+          <div class="d-flex gap-2">
+            <input type="date" id="dateFrom" class="form-control form-control-sm">
+            <input type="date" id="dateTo" class="form-control form-control-sm">
+          </div>
+        </div>
+      </div>
+      
+      <!-- Filter Actions -->
+      <div class="row mt-4">
+        <div class="col-12">
+          <div class="d-flex gap-2 justify-content-end">
+            <button id="clearFilters" class="btn btn-outline-secondary btn-modern">
+              <i class="bi bi-x-circle me-1"></i>Clear Filters
+            </button>
+            <button id="applyFilters" class="btn btn-primary btn-modern">
+              <i class="bi bi-funnel-fill me-1"></i>Apply Filters
+            </button>
+            <button id="saveFilter" class="btn btn-success btn-modern">
+              <i class="bi bi-bookmark me-1"></i>Save Filter
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Quick Filters -->
+      <div class="row mt-3">
+        <div class="col-12">
+          <div class="d-flex gap-1 align-items-center flex-wrap">
+            <small class="text-muted me-2">Quick filters:</small>
+            <button class="btn btn-sm btn-outline-danger" onclick="applyQuickFilter('high-risk')">
+              🚨 High Risk Only
+            </button>
+            <button class="btn btn-sm btn-outline-warning" onclick="applyQuickFilter('low-attendance')">
+              📉 Low Attendance (<75%)
+            </button>
+            <button class="btn btn-sm btn-outline-info" onclick="applyQuickFilter('overdue-fees')">
+              💸 Overdue Fees
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="applyQuickFilter('recent')">
+              🕒 Recent Issues
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-lg-3">
+    <div class="card h-100 border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="text-muted text-uppercase small">At-Risk</div>
+            <div class="fs-2 fw-bold" id="countRisk">0</div>
+          </div>
+          <i class="bi bi-exclamation-triangle text-danger display-6"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card h-100 border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="text-muted text-uppercase small">High</div>
+            <div class="fs-2 fw-bold text-danger" id="countHigh">0</div>
+          </div>
+          <i class="bi bi-thermometer-high text-danger display-6"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card h-100 border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="text-muted text-uppercase small">Medium</div>
+            <div class="fs-2 fw-bold text-warning" id="countMedium">0</div>
+          </div>
+          <i class="bi bi-thermometer-half text-warning display-6"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card h-100 border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="text-muted text-uppercase small">Low</div>
+            <div class="fs-2 fw-bold text-success" id="countLow">0</div>
+          </div>
+          <i class="bi bi-thermometer-low text-success display-6"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- At-Risk Table -->
+  <div class="col-lg-7">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white">
+        <strong>At-Risk Students</strong>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table align-middle" id="riskTable">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Risk</th>
+                <th>Attendance</th>
+                <th>Flags</th>
+                <th>Reasons</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="col-lg-5">
+    <!-- Risk Distribution Donut Chart -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <strong>Risk Level Distribution</strong>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-primary" onclick="downloadChart('riskDistChart', 'risk-distribution')">📊 PNG</button>
+          <button class="btn btn-outline-info" onclick="exportChartData('risk-distribution')">📊 CSV</button>
+        </div>
+      </div>
+      <div class="card-body"><canvas id="riskDistChart" height="200"></canvas></div>
+    </div>
+    
+    <!-- Attendance Trends Bar Chart -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <strong>Attendance Distribution</strong>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-success" onclick="downloadChart('attendanceChart', 'attendance-trends')">📊 PNG</button>
+          <button class="btn btn-outline-info" onclick="exportChartData('attendance-trends')">📊 CSV</button>
+        </div>
+      </div>
+      <div class="card-body"><canvas id="attendanceChart" height="200"></canvas></div>
+    </div>
+    
+    <!-- Performance vs Risk Scatter Plot -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <strong>Performance vs Risk Analysis</strong>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-warning" onclick="downloadChart('performanceChart', 'performance-risk')">📊 PNG</button>
+          <button class="btn btn-outline-info" onclick="exportChartData('performance-risk')">📊 CSV</button>
+        </div>
+      </div>
+      <div class="card-body"><canvas id="performanceChart" height="200"></canvas></div>
+    </div>
+    
+    <!-- Fee Status Pie Chart -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <strong>Fee Payment Status</strong>
+        <button class="btn btn-sm btn-outline-info" onclick="downloadChart('feesChart', 'fee-status')">📊 Export</button>
+      </div>
+      <div class="card-body"><canvas id="feesChart" height="200"></canvas></div>
+    </div>
+    
+    <!-- Monthly Trend Line Chart -->
+    <div class="card shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <strong>Monthly Risk Trends</strong>
+        <button class="btn btn-sm btn-outline-dark" onclick="downloadChart('trendChart', 'monthly-trends')">📊 Export</button>
+      </div>
+      <div class="card-body"><canvas id="trendChart" height="200"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- Export Panel -->
+<div class="card shadow-sm mt-4">
+  <div class="card-header bg-primary text-white">
+    <strong><i class="bi bi-download me-2"></i>Export Data</strong>
+  </div>
+  <div class="card-body">
+    <div class="row g-2">
+      <div class="col-md-3">
+        <a href="/export/students/" class="btn btn-outline-success w-100">
+          <i class="bi bi-file-earmark-excel me-2"></i>Students Data
+        </a>
+      </div>
+      <div class="col-md-3">
+        <a href="/export/attendance/" class="btn btn-outline-info w-100">
+          <i class="bi bi-file-earmark-excel me-2"></i>Attendance Report
+        </a>
+      </div>
+      <div class="col-md-3">
+        <a href="/export/fees/" class="btn btn-outline-warning w-100">
+          <i class="bi bi-file-earmark-excel me-2"></i>Fee Report
+        </a>
+      </div>
+      <div class="col-md-3">
+        <a href="/export/risk-analysis/" class="btn btn-outline-danger w-100">
+          <i class="bi bi-file-earmark-excel me-2"></i>Risk Analysis
+        </a>
+      </div>
+    </div>
+    <div class="row g-2 mt-2">
+      <div class="col-md-6">
+        <a href="/export/comprehensive/" class="btn btn-dark w-100">
+          <i class="bi bi-file-earmark-zip me-2"></i>Comprehensive Report
+        </a>
+      </div>
+      <div class="col-md-4">
+        <button class="btn btn-outline-secondary w-100" onclick="exportAllCharts()">
+          <i class="bi bi-images me-2"></i>Export All Charts
+        </button>
+      </div>
+      <div class="col-md-4">
+        <button class="btn btn-outline-info w-100" onclick="exportAllChartData()">
+          <i class="bi bi-file-earmark-spreadsheet me-2"></i>Export Chart Data
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Alerts Panel -->
+<div class="card shadow-sm mt-4">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <strong>Alerts & Notifications</strong>
+    <button id="refreshAlerts" class="btn btn-sm btn-outline-secondary">Refresh</button>
+  </div>
+  <div class="card-body" id="alertsList">
+    <div class="text-muted">No alerts yet.</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function() {
+  const isSelf = {{ self_mode|yesno:'true,false'|default:'false' }};
+
+  const tableBody = document.querySelector('#riskTable tbody');
+  const studentFilter = document.getElementById('studentFilter');
+  const riskFilter = document.getElementById('riskFilter');
+  document.getElementById('refreshBtn').addEventListener('click', fetchAll);
+  document.getElementById('refreshAlerts').addEventListener('click', fetchAlerts);
+
+  let lastItems = [];
+  function badge(level) {
+    const cls = level === 'High' ? 'danger' : (level === 'Medium' ? 'warning' : 'success');
+    return `<span class="badge bg-${cls}">${level}</span>`;
+  }
+
+  function renderTable(items) {
+    tableBody.innerHTML = '';
+    items.forEach(i => {
+      const tr = document.createElement('tr');
+      const flags = [i.overdue_fees ? 'Overdue' : null, i.failing_grades ? 'Failing' : null].filter(Boolean).join(', ') || 'None';
+      tr.innerHTML = `
+        <td><strong>${i.student_id}</strong></td>
+        <td>${badge(i.risk_level)} <small class="text-muted">(score ${i.risk_score})</small></td>
+        <td>${i.attendance_percent}%</td>
+        <td>${flags}</td>
+        <td>${(i.reasons || []).join(', ')}</td>
+      `;
+      tableBody.appendChild(tr);
+    });
+  }
+
+  // Enhanced filtering system
+  let currentFilters = {
+    globalSearch: '',
+    studentId: '',
+    riskLevel: '',
+    attendanceMin: null,
+    attendanceMax: null,
+    overdueFees: false,
+    failingGrades: false,
+    dateFrom: '',
+    dateTo: ''
+  };
+  
+  function applyFilters(items) {
+    let filtered = items;
+    
+    // Global search
+    if (currentFilters.globalSearch) {
+      const search = currentFilters.globalSearch.toLowerCase();
+      filtered = filtered.filter(i => 
+        i.student_id.toLowerCase().includes(search) ||
+        (i.reasons || []).join(' ').toLowerCase().includes(search)
+      );
+    }
+    
+    // Student ID filter
+    if (currentFilters.studentId) {
+      filtered = filtered.filter(i => 
+        i.student_id.toLowerCase().includes(currentFilters.studentId.toLowerCase())
+      );
+    }
+    
+    // Risk level filter
+    if (currentFilters.riskLevel) {
+      filtered = filtered.filter(i => i.risk_level === currentFilters.riskLevel);
+    }
+    
+    // Attendance range filter
+    if (currentFilters.attendanceMin !== null) {
+      filtered = filtered.filter(i => i.attendance_percent >= currentFilters.attendanceMin);
+    }
+    if (currentFilters.attendanceMax !== null) {
+      filtered = filtered.filter(i => i.attendance_percent <= currentFilters.attendanceMax);
+    }
+    
+    // Risk factors filters
+    if (currentFilters.overdueFees) {
+      filtered = filtered.filter(i => i.overdue_fees === true);
+    }
+    if (currentFilters.failingGrades) {
+      filtered = filtered.filter(i => i.failing_grades === true);
+    }
+    
+    return filtered;
+  }
+
+  function updateCounts(items) {
+    document.getElementById('countRisk').textContent = items.length;
+    document.getElementById('countHigh').textContent = items.filter(i => i.risk_level==='High').length;
+    document.getElementById('countMedium').textContent = items.filter(i => i.risk_level==='Medium').length;
+    document.getElementById('countLow').textContent = items.filter(i => i.risk_level==='Low').length;
+  }
+
+  async function fetchStudents() {
+    const url = isSelf ? '/dashboard/data/my/' : '/dashboard/data/students/';
+    const res = await fetch(url);
+    const json = await res.json();
+    const items = json.items || (json.item ? [json.item] : []);
+    lastItems = items;
+    renderTable(applyFilters(items));
+    updateCounts(items);
+  }
+
+  async function fetchAlerts() {
+    const res = await fetch('/dashboard/data/alerts/');
+    const json = await res.json();
+    const list = document.getElementById('alertsList');
+    const items = json.items || [];
+    list.innerHTML = items.length ? '' : '<div class="text-muted">No alerts.</div>';
+    items.slice(0,10).forEach(n => {
+      const div = document.createElement('div');
+      div.className = 'd-flex justify-content-between align-items-start border-bottom py-2';
+      div.innerHTML = `
+        <div>
+          <div class="fw-semibold">${n.student_id || ''} <small class="text-muted">${n.student_name || ''}</small></div>
+          <div class="small">${n.message || ''}</div>
+        </div>
+        <span class="badge ${n.read ? 'bg-secondary' : 'bg-danger'}">${n.read ? 'Read' : 'New'}</span>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  // Enhanced Charts with better visualizations
+  let charts = {};
+  
+  // Chart color schemes
+  const colors = {
+    primary: '#0d6efd',
+    success: '#198754', 
+    warning: '#ffc107',
+    danger: '#dc3545',
+    info: '#0dcaf0',
+    secondary: '#6c757d'
+  };
+  
+  function createGradient(ctx, color1, color2) {
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, color1);
+    gradient.addColorStop(1, color2);
+    return gradient;
+  }
+  
+  async function fetchAnalytics() {
+    try {
+      const res = await fetch('/dashboard/analytics/');
+      const json = await res.json();
+      const a = json.analytics || {};
+      window._analytics = a;
+      
+      // 1. Risk Distribution Donut Chart
+      updateRiskDistributionChart();
+      
+      // 2. Attendance Distribution Bar Chart
+      const attLabels = Object.keys(a.attendance_distribution || {});
+      const attData = Object.values(a.attendance_distribution || {});
+      charts.attendance?.destroy();
+      const attCtx = document.getElementById('attendanceChart').getContext('2d');
+      charts.attendance = new Chart(attCtx, {
+        type: 'bar',
+        data: {
+          labels: attLabels,
+          datasets: [{
+            label: 'Number of Students',
+            data: attData,
+            backgroundColor: createGradient(attCtx, colors.primary, colors.primary + '80'),
+            borderColor: colors.primary,
+            borderWidth: 2,
+            borderRadius: 8,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+            tooltip: {
+              backgroundColor: 'rgba(0,0,0,0.8)',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              cornerRadius: 8
+            }
+          },
+          scales: {
+            y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
+            x: { grid: { display: false } }
+          },
+          animation: { duration: 1000, easing: 'easeInOutQuart' }
+        }
+      });
+      
+      // 3. Performance vs Risk Scatter Plot
+      updatePerformanceChart();
+      
+      // 4. Fee Status Pie Chart
+      const fs = a.fees || {};
+      const fsLabels = Object.keys(fs.status_counts || {});
+      const fsData = Object.values(fs.status_counts || {});
+      charts.fees?.destroy();
+      charts.fees = new Chart(document.getElementById('feesChart'), {
+        type: 'doughnut',
+        data: {
+          labels: fsLabels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
+          datasets: [{
+            data: fsData,
+            backgroundColor: [colors.success, colors.warning, colors.danger, colors.secondary],
+            borderWidth: 3,
+            borderColor: '#fff',
+            hoverOffset: 10
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { cornerRadius: 8 }
+          },
+          animation: { animateScale: true, duration: 1000 }
+        }
+      });
+      
+      // 5. Monthly Trend Line Chart
+      updateTrendChart(a);
+      
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+    }
+  }
+  
+  function updateRiskDistributionChart() {
+    const riskCounts = {
+      'High Risk': parseInt(document.getElementById('countHigh').textContent) || 0,
+      'Medium Risk': parseInt(document.getElementById('countMedium').textContent) || 0,
+      'Low Risk': parseInt(document.getElementById('countLow').textContent) || 0
+    };
+    
+    charts.riskDist?.destroy();
+    const riskCtx = document.getElementById('riskDistChart').getContext('2d');
+    charts.riskDist = new Chart(riskCtx, {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(riskCounts),
+        datasets: [{
+          data: Object.values(riskCounts),
+          backgroundColor: [colors.danger, colors.warning, colors.success],
+          borderWidth: 3,
+          borderColor: '#fff',
+          hoverOffset: 15
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom' },
+          tooltip: { cornerRadius: 8 }
+        },
+        animation: { animateRotate: true, duration: 1500 }
+      }
+    });
+  }
+  
+  function updatePerformanceChart() {
+    // Create scatter plot data from student risk data
+    const scatterData = lastItems.map(item => ({
+      x: item.attendance_percent || 0,
+      y: item.risk_score || 0,
+      student: item.student_id
+    }));
+    
+    charts.performance?.destroy();
+    charts.performance = new Chart(document.getElementById('performanceChart'), {
+      type: 'scatter',
+      data: {
+        datasets: [{
+          label: 'Student Risk vs Attendance',
+          data: scatterData,
+          backgroundColor: colors.info + '80',
+          borderColor: colors.info,
+          pointRadius: 6,
+          pointHoverRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.parsed.student}: ${context.parsed.x}% attendance, Risk: ${context.parsed.y}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Attendance Percentage' }, min: 0, max: 100 },
+          y: { title: { display: true, text: 'Risk Score' }, beginAtZero: true }
+        }
+      }
+    });
+  }
+  
+  function updateTrendChart(analytics) {
+    const rt = (analytics && analytics.risk_trend) || [];
+    const months = rt.map(r => r.month);
+    const monthLabels = months.map(m => {
+      const [y, mm] = m.split('-');
+      const d = new Date(parseInt(y,10), parseInt(mm,10)-1, 1);
+      return d.toLocaleDateString('en-US', { month: 'short' });
+    });
+    const highRiskTrend = rt.map(r => r.high || 0);
+    const mediumRiskTrend = rt.map(r => r.medium || 0);
+    const lowRiskTrend = rt.map(r => r.low || 0);
+
+    charts.trend?.destroy();
+    const trendCtx = document.getElementById('trendChart').getContext('2d');
+    charts.trend = new Chart(trendCtx, {
+      type: 'line',
+      data: {
+        labels: monthLabels,
+        datasets: [
+          {
+            label: 'High Risk',
+            data: highRiskTrend,
+            borderColor: colors.danger,
+            backgroundColor: colors.danger + '20',
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: 'Medium Risk',
+            data: mediumRiskTrend,
+            borderColor: colors.warning,
+            backgroundColor: colors.warning + '20',
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: 'Low Risk',
+            data: lowRiskTrend,
+            borderColor: colors.success,
+            backgroundColor: colors.success + '20',
+            tension: 0.4,
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'top' }
+        },
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'Number of Students' } },
+          x: { title: { display: true, text: 'Month' } }
+        },
+        animation: { duration: 800, easing: 'easeInOutCubic' }
+      }
+    });
+  }
+  
+  // Chart download functionality
+  window.downloadChart = function(chartId, filename) {
+    const canvas = document.getElementById(chartId);
+    const url = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filename}-${new Date().toISOString().split('T')[0]}.png`;
+    a.click();
+  };
+  
+  // Export chart data to CSV
+  window.exportChartData = function(chartType) {
+    let data = [];
+    let filename = '';
+    
+    switch(chartType) {
+      case 'risk-distribution':
+        const riskCounts = {
+          'High Risk': parseInt(document.getElementById('countHigh').textContent) || 0,
+          'Medium Risk': parseInt(document.getElementById('countMedium').textContent) || 0,
+          'Low Risk': parseInt(document.getElementById('countLow').textContent) || 0
+        };
+        data = Object.entries(riskCounts).map(([level, count]) => ({ 'Risk Level': level, 'Count': count }));
+        filename = 'risk-distribution-data';
+        break;
+        
+      case 'attendance-trends':
+        // Use analytics data if available
+        data = lastItems.map(item => ({
+          'Student ID': item.student_id,
+          'Attendance Percentage': item.attendance_percent,
+          'Risk Level': item.risk_level
+        }));
+        filename = 'attendance-data';
+        break;
+        
+      case 'performance-risk':
+        data = lastItems.map(item => ({
+          'Student ID': item.student_id,
+          'Attendance %': item.attendance_percent || 0,
+          'Risk Score': item.risk_score || 0,
+          'Risk Level': item.risk_level,
+          'Overdue Fees': item.overdue_fees ? 'Yes' : 'No',
+          'Failing Grades': item.failing_grades ? 'Yes' : 'No'
+        }));
+        filename = 'performance-risk-data';
+        break;
+        
+      default:
+        notifications.error('Chart data export not available for this chart');
+        return;
+    }
+    
+    if (data.length === 0) {
+      notifications.warning('No data available to export');
+      return;
+    }
+    
+    // Convert to CSV
+    const headers = Object.keys(data[0]);
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row => headers.map(header => `"${row[header]}"`).join(','))
+    ].join('\n');
+    
+    // Download CSV
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filename}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    notifications.success(`Chart data exported as ${filename}.csv`);
+  };
+  
+  // Export all charts at once
+  window.exportAllCharts = function() {
+    const chartIds = ['riskDistChart', 'attendanceChart', 'performanceChart', 'feesChart', 'trendChart'];
+    const chartNames = ['risk-distribution', 'attendance-trends', 'performance-risk', 'fee-status', 'monthly-trends'];
+    
+    chartIds.forEach((chartId, index) => {
+      setTimeout(() => {
+        try {
+          downloadChart(chartId, chartNames[index]);
+        } catch (e) {
+          console.log(`Could not export ${chartId}:`, e);
+        }
+      }, index * 500); // Delay to avoid overwhelming the browser
+    });
+    
+    notifications.success('📊 Exporting all charts... Check your downloads folder!');
+  };
+  
+  // Export all chart data as CSV
+  window.exportAllChartData = function() {
+    ['risk-distribution', 'attendance-trends', 'performance-risk'].forEach((chartType, index) => {
+      setTimeout(() => {
+        exportChartData(chartType);
+      }, index * 200);
+    });
+  };
+
+  async function fetchAll() {
+    await Promise.all([fetchStudents(), fetchAnalytics(), fetchAlerts()]);
+  }
+
+  // Filter management functions
+  function updateFiltersFromUI() {
+    currentFilters = {
+      globalSearch: document.getElementById('globalSearch').value || '',
+      studentId: studentFilter.value || '',
+      riskLevel: riskFilter.value || '',
+      attendanceMin: parseFloat(document.getElementById('attendanceMin').value) || null,
+      attendanceMax: parseFloat(document.getElementById('attendanceMax').value) || null,
+      overdueFees: document.getElementById('filterOverdueFees').checked,
+      failingGrades: document.getElementById('filterFailingGrades').checked,
+      dateFrom: document.getElementById('dateFrom').value || '',
+      dateTo: document.getElementById('dateTo').value || ''
+    };
+  }
+  
+  function clearAllFilters() {
+    currentFilters = {
+      globalSearch: '',
+      studentId: '',
+      riskLevel: '',
+      attendanceMin: null,
+      attendanceMax: null,
+      overdueFees: false,
+      failingGrades: false,
+      dateFrom: '',
+      dateTo: ''
+    };
+    
+    // Update UI
+    document.getElementById('globalSearch').value = '';
+    studentFilter.value = '';
+    riskFilter.value = '';
+    document.getElementById('attendanceMin').value = '';
+    document.getElementById('attendanceMax').value = '';
+    document.getElementById('filterOverdueFees').checked = false;
+    document.getElementById('filterFailingGrades').checked = false;
+    document.getElementById('dateFrom').value = '';
+    document.getElementById('dateTo').value = '';
+    
+    // Refresh display
+    renderTable(applyFilters(lastItems));
+    updateCounts(lastItems);
+    
+    notifications.info('Filters cleared');
+  }
+  
+  window.applyQuickFilter = function(type) {
+    clearAllFilters();
+    
+    switch(type) {
+      case 'high-risk':
+        currentFilters.riskLevel = 'High';
+        riskFilter.value = 'High';
+        notifications.info('Showing high-risk students only');
+        break;
+        
+      case 'low-attendance':
+        currentFilters.attendanceMax = 75;
+        document.getElementById('attendanceMax').value = '75';
+        notifications.info('Showing students with attendance < 75%');
+        break;
+        
+      case 'overdue-fees':
+        currentFilters.overdueFees = true;
+        document.getElementById('filterOverdueFees').checked = true;
+        notifications.info('Showing students with overdue fees');
+        break;
+        
+      case 'recent':
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        currentFilters.dateFrom = oneWeekAgo.toISOString().split('T')[0];
+        document.getElementById('dateFrom').value = currentFilters.dateFrom;
+        notifications.info('Showing recent issues (last 7 days)');
+        break;
+    }
+    
+    const filteredItems = applyFilters(lastItems);
+    renderTable(filteredItems);
+    updateCounts(filteredItems);
+  };
+  
+  function saveCurrentFilter() {
+    const filterName = prompt('Enter a name for this filter:');
+    if (filterName) {
+      const savedFilters = JSON.parse(localStorage.getItem('erp-saved-filters') || '{}');
+      savedFilters[filterName] = { ...currentFilters };
+      localStorage.setItem('erp-saved-filters', JSON.stringify(savedFilters));
+      notifications.success(`Filter "${filterName}" saved successfully!`);
+    }
+  }
+  
+  // Setup filter event listeners
+  function setupAdvancedFilters() {
+    // Apply filters button
+    document.getElementById('applyFilters').addEventListener('click', function() {
+      updateFiltersFromUI();
+      const filteredItems = applyFilters(lastItems);
+      renderTable(filteredItems);
+      updateCounts(filteredItems);
+      
+      notifications.success(`Applied filters - showing ${filteredItems.length} results`);
+      
+      // Update charts with filtered data
+      updateRiskDistributionChart();
+      updatePerformanceChart();
+    });
+    
+    // Clear filters button
+    document.getElementById('clearFilters').addEventListener('click', clearAllFilters);
+    
+    // Save filter button
+    document.getElementById('saveFilter').addEventListener('click', saveCurrentFilter);
+    
+    // Real-time search on global search
+    document.getElementById('globalSearch').addEventListener('input', function() {
+      if (this.value.length > 2 || this.value.length === 0) {
+        updateFiltersFromUI();
+        const filteredItems = applyFilters(lastItems);
+        renderTable(filteredItems);
+        updateCounts(filteredItems);
+      }
+    });
+    
+    // Enter key support for all inputs
+    document.querySelectorAll('#advancedFilters input, #advancedFilters select').forEach(input => {
+      input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          document.getElementById('applyFilters').click();
+        }
+      });
+    });
+  }
+  
+  // Initial load and polling
+  fetchAll();
+  setupAdvancedFilters();
+  setInterval(fetchStudents, 10000); // every 10s
+  setInterval(fetchAlerts, 15000);
+})();
+</script>
+{% endblock %}

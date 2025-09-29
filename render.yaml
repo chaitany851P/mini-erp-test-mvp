@@ -1,0 +1,71 @@
+databases:
+  - name: mini-erp-db
+    plan: free
+    databaseName: mini_erp
+    user: mini_erp
+
+services:
+  - type: web
+    name: mini-erp-web
+    env: python
+    plan: free
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+    startCommand: |
+      gunicorn mini_erp.wsgi:application \
+        --workers=${GUNICORN_WORKERS:-2} \
+        --timeout=${GUNICORN_TIMEOUT:-180} \
+        --bind 0.0.0.0:$PORT \
+        --log-file -
+    postDeployCommand: |
+      python manage.py migrate --noinput
+    autoDeploy: true
+    envVars:
+      - key: DJANGO_DEBUG
+        value: "false"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: "*.onrender.com"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://*.onrender.com"
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: CSRF_COOKIE_SECURE
+        value: "true"
+      - key: SECURE_SSL_REDIRECT
+        value: "true"
+      - key: PYTHON_VERSION
+        value: 3.12.4
+      # Secrets to set in Render dashboard
+      - key: DJANGO_SECRET_KEY
+        sync: false
+      # Use the managed Postgres connection string
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mini-erp-db
+          property: connectionString
+      # Firebase Admin SDK Secret File path (set a Secret File in Render and point to it)
+      - key: FIREBASE_ADMIN_SDK_PATH
+        value: "/etc/secrets/firebase-admin.json"
+      # Optional email and Cashfree secrets (set in dashboard)
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: EMAIL_USE_TLS
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+      - key: CASHFREE_ENV
+        sync: false
+      - key: CASHFREE_APP_ID
+        sync: false
+      - key: CASHFREE_SECRET_KEY
+        sync: false
+      - key: CASHFREE_WEBHOOK_SECRET
+        sync: false

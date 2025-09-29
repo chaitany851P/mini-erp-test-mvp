@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Hostel Application{% endblock %}
+{% block content %}
+<h2 class="mb-3"><i class="bi bi-house-door text-info"></i> Hostel Application</h2>
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white"><strong>Apply</strong></div>
+      <div class="card-body">
+        <form id="hostelForm">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Room type</label>
+            <select id="room_type" class="form-select">
+              <option value="single">Single</option>
+              <option value="double">Double</option>
+              <option value="triple">Triple</option>
+              <option value="dormitory">Dormitory</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Preferences</label>
+            <textarea id="preferences" class="form-control" placeholder="Any special needs"></textarea>
+          </div>
+          <button class="btn btn-info" type="submit">Submit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white"><strong>My Applications</strong></div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table align-middle" id="hostelTable">
+            <thead><tr><th>Room</th><th>Preferences</th><th>Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+(function(){
+  function getCookie(name) { const m = document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)'); return m ? m.pop() : ''; }
+  const csrftoken = getCookie('csrftoken');
+  async function load() {
+    const res = await fetch('/students/hostel-applications/');
+    const json = await res.json();
+    const rows = (json.items||[]).map(d => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${d.room_type}</td><td>${d.preferences||''}</td><td><span class="badge ${d.status==='approved'?'bg-success':d.status==='rejected'?'bg-danger':'bg-secondary'}">${d.status}</span></td>`;
+      return tr;
+    });
+    const tb = document.querySelector('#hostelTable tbody');
+    tb.innerHTML = ''; rows.forEach(r => tb.appendChild(r));
+  }
+  document.getElementById('hostelForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const body = {
+      room_type: document.getElementById('room_type').value,
+      preferences: document.getElementById('preferences').value
+    };
+    const res = await fetch('/students/hostel-applications/', { method:'POST', headers: { 'Content-Type':'application/json', 'X-CSRFToken': csrftoken }, body: JSON.stringify(body)});
+    if (res.ok) { alert('Submitted'); load(); } else { alert('Failed to submit'); }
+  });
+  load();
+})();
+</script>
+{% endblock %}

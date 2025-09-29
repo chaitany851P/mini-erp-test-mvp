@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block title %}Manage Hostel Applications{% endblock %}
+{% block content %}
+<h2 class="mb-3"><i class="bi bi-house-gear text-info"></i> Manage Hostel Applications</h2>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <div class="row g-3 mb-3">
+      <div class="col-md-8 d-flex gap-2 align-items-center">
+        <input id="filterStudent" class="form-control" placeholder="Filter by Student ID" style="max-width: 240px;" />
+        <button id="refreshBtn" class="btn btn-outline-secondary">Refresh</button>
+        <span class="text-muted small">Most recent requests appear first</span>
+      </div>
+      <div class="col-md-4">
+        <div class="row text-center">
+          <div class="col-4">
+            <div class="fw-bold" id="countPending">0</div>
+            <div class="text-muted small">Pending</div>
+          </div>
+          <div class="col-4">
+            <div class="fw-bold" id="countApproved">0</div>
+            <div class="text-muted small">Approved</div>
+          </div>
+          <div class="col-4">
+            <div class="fw-bold" id="countRejected">0</div>
+            <div class="text-muted small">Rejected</div>
+          </div>
+        </div>
+        <div class="text-center mt-2">
+          <small class="text-muted">Total Requests: <span id="totalRequests">0</span></small>
+        </div>
+        <div class="text-center mt-1">
+          <small class="text-muted">Room Types: <span id="roomTypeCount">0</span> types</small>
+        </div>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle" id="hostelTable">
+        <thead>
+          <tr>
+            <th>Request ID</th>
+            <th>Student Info</th>
+            <th>Room Type</th>
+            <th>Status</th>
+            <th>Request Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+(function(){
+  function getCookie(name) { const m = document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)'); return m ? m.pop() : ''; }
+  const csrftoken = getCookie('csrftoken');
+  const tb = document.querySelector('#hostelTable tbody');
+  const filter = document.getElementById('filterStudent');
+  document.getElementById('refreshBtn').addEventListener('click', load);
+
+  async function load(){
+    const res = await fetch('/students/hostel-applications/');
+    const json = await res.json();
+    let items = json.items || [];
+    // Sort by created_at desc when available
+    items.sort((a,b)=> String(b.created_at||'').localeCompare(String(a.created_at||'')));
+    const f = (filter.value || '').trim();
+    if (f) items = items.filter(i => (i.student_id||'').includes(f));
+    render(items);
+  }
+
+  function render(items){
+    // update summary
+    const statusCounts = { pending:0, approved:0, rejected:0 };
+    const roomTypes = new Set();
+    items.forEach(d => {
+      const s = (d.status||'pending').toLowerCase();
+      if (statusCounts[s] !== undefined) statusCounts[s]++;
+      if (d.room_type) roomTypes.add(d.room_type);
+    });
+    document.getElementById('countPending').textContent = statusCounts.pending;
+    document.getElementById('countApproved').textContent = statusCounts.approved;
+    document.getElementById('countRejected').textContent = statusCounts.rejected;
+    document.getElementById('roomTypeCount').textContent = roomTypes.size;
+    document.getElementById('totalRequests').textContent = items.length;
+
+    tb.innerHTML = '';
+    items.forEach(d => {
+      const tr = document.createElement('tr');
+      const dt = d.created_at ? new Date(d.created_at) : null;
+      const dateStr = dt ? dt.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric'}) : '';
+      const timeStr = dt ? dt.toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' }) : '';
+      const studentInfo = `
+        <div><strong>${d.student_name||''}</strong></div>
+        <div class=\"small text-muted\">ID: ${d.student_id||''}</div>
+        <div class=\"small text-muted\">${d.student_email||''}</div>`;
+      tr.innerHTML = `
+        <td><code>${d.id||''}</code></td>
+        <td>${studentInfo}</td>
+        <td>${(d.room_type||d.roomType||'').toString().replace(/^./, c=>c.toUpperCase())}</td>
+        <td><span class=\"badge ${d.status==='approved'?'bg-success':d.status==='rejected'?'bg-danger':'bg-secondary'}\">${d.status}</span></td>
+        <td><div>${dateStr}</div><div class=\"small text-muted\">${timeStr}</div></td>
+        <td>
+          <div class=\"input-group input-group-sm\" style=\"max-width: 220px;\">
+            <input class=\"form-control\" placeholder=\"Room #\" value=\"\" />
+            <button class=\"btn btn-success\">Approve</button>
+            <button class=\"btn btn-outline-danger\">Reject</button>
+          </div>
+        </td>`;
+      const roomInput = tr.querySelector('input.form-control');
+      const approveBtn = tr.querySelector('.btn-success');
+      const rejectBtn = tr.querySelector('.btn-outline-danger');
+      approveBtn.addEventListener('click', ()=> updateStatus(d.id, 'approved', roomInput.value));
+      rejectBtn.addEventListener('click', ()=> updateStatus(d.id, 'rejected'));
+      tb.appendChild(tr);
+    });
+  }
+
+  async function updateStatus(id, status, room_number){
+    const body = { status };
+    if (status==='approved' && room_number) body.room_number = room_number;
+    const res = await fetch(`/students/hostel-applications/${id}/`, { method:'PUT', headers:{ 'Content-Type':'application/json','X-CSRFToken':csrftoken }, body: JSON.stringify(body) });
+    if (res.ok) load(); else alert('Failed to update');
+  }
+
+  load();
+})();
+</script>
+{% endblock %}

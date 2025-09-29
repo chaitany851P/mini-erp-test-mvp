@@ -72,7 +72,47 @@ def fee_list(request):
         all_fees = []
         messages.error(request, 'Error loading payment history.')
     
-    return render(request, 'fees/list.html', {'fees': all_fees})
+    # Deduplicate by transaction_id and normalize amounts
+    dedup = {}
+    for f in all_fees:
+        tid = f.get('transaction_id')
+        if not tid:
+            continue
+        # keep latest by created_at
+        existing = dedup.get(tid)
+        if not existing or (f.get('created_at','') > existing.get('created_at','')):
+            # normalize amount to float
+            try:
+                amt = float(f.get('amount', 0))
+            except Exception:
+                amt = 0.0
+            norm = {
+                **f,
+                'amount': amt,
+                'status': (f.get('status') or '').lower(),
+            }
+            dedup[tid] = norm
+    fees_list = sorted(dedup.values(), key=lambda x: x.get('created_at',''), reverse=True)
+
+    # Compute summary
+    summary = {'completed': 0, 'pending': 0, 'failed': 0, 'total_paid': 0.0}
+    for f in fees_list:
+        s = f.get('status')
+        if s in summary:
+            summary[s] += 1
+        if s == 'completed':
+            summary['total_paid'] += float(f.get('amount', 0) or 0)
+
+    context = {
+        'fees': fees_list,
+        'summary': {
+            'completed': summary['completed'],
+            'pending': summary['pending'],
+            'failed': summary['failed'],
+            'total_paid': round(summary['total_paid'], 2),
+        }
+    }
+    return render(request, 'fees/list.html', context)
 
 def download_receipt(request, transaction_id):
     """Download fee receipt PDF"""

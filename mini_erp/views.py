@@ -1,4 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from mini_erp.firebase_utils import get_collection_count, get_all_documents
 from admissions.models import Admission
 from fees.models import FeePayment
@@ -7,8 +10,20 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def signup_view(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Account created. You can now login.')
+            return redirect('login')
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration/signup.html', {'form': form})
+
+@login_required
 def home_view(request):
-    """Home page with basic statistics"""
+    """Home page with basic statistics (requires login)"""
     stats = {}
     
     try:

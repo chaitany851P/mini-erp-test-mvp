@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load auth_extras %}
 
 {% block title %}Application Details - {{ admission.student_id }} - Mini ERP System{% endblock %}
 
@@ -132,6 +133,30 @@
                 </div>
             </div>
         </div>
+        
+        {% if user.is_authenticated and (user.is_superuser or user|has_group:'admin') %}
+        <div class="card shadow mb-4">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="bi bi-shield-check"></i> Admin Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'admissions:approve' admission.student_id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-sm me-2">
+                        <i class="bi bi-check-circle"></i> Approve
+                    </button>
+                </form>
+                <form method="post" action="{% url 'admissions:reject' admission.student_id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="bi bi-x-circle"></i> Reject
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
         
         <!-- Quick Actions -->
         <div class="card shadow">

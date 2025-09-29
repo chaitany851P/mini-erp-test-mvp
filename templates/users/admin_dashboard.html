@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - Mini ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-speedometer2 me-2"></i>Admin Dashboard</h1>
+    <div>
+        <a href="{% url 'admin_add_student' %}" class="btn btn-primary">
+            <i class="bi bi-person-plus me-2"></i>Add Student
+        </a>
+    </div>
+</div>
+
+<!-- System Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card admin">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="text-danger">{{ stats.total_admins }}</h4>
+                        <p class="mb-0">Administrators</p>
+                    </div>
+                    <i class="bi bi-shield-check fs-1 text-danger opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card faculty">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="text-warning">{{ stats.total_faculty }}</h4>
+                        <p class="mb-0">Faculty Members</p>
+                    </div>
+                    <i class="bi bi-person-badge fs-1 text-warning opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card student">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="text-success">{{ stats.total_students }}</h4>
+                        <p class="mb-0">Students</p>
+                    </div>
+                    <i class="bi bi-people fs-1 text-success opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card pending">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="text-warning">{{ stats.pending_applications }}</h4>
+                        <p class="mb-0">Pending Applications</p>
+                    </div>
+                    <i class="bi bi-hourglass-split fs-1 text-warning opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card dashboard-card h-100">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-person-plus me-2"></i>User Management
+            </div>
+            <div class="card-body">
+                <p class="card-text">Add and manage users in the system.</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'admin_add_student' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-person-plus me-2"></i>Add Student
+                    </a>
+                    <a href="{% url 'users_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-people me-2"></i>View All Users
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card dashboard-card h-100">
+            <div class="card-header bg-success text-white">
+                <i class="bi bi-file-earmark-check me-2"></i>Applications
+            </div>
+            <div class="card-body">
+                <p class="card-text">Review and manage student applications.</p>
+                <div class="d-grid gap-2">
+<a href="{% url 'students:admin_leaves_page' %}" class="btn btn-outline-success">
+                        <i class="bi bi-calendar-x me-2"></i>Leave Applications
+                    </a>
+                    <a href="{% url 'students:admin_hostel_page' %}" class="btn btn-outline-success">
+                        <i class="bi bi-house-door me-2"></i>Hostel Applications
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card dashboard-card h-100">
+            <div class="card-header bg-info text-white">
+                <i class="bi bi-gear me-2"></i>System Settings
+            </div>
+            <div class="card-body">
+                <p class="card-text">Configure system settings and preferences.</p>
+                <div class="d-grid gap-2">
+                    <a href="/admin/" class="btn btn-outline-info">
+                        <i class="bi bi-gear me-2"></i>Django Admin
+                    </a>
+                    <button class="btn btn-outline-info" disabled>
+                        <i class="bi bi-envelope me-2"></i>Email Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Users -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock me-2"></i>Recently Added Users</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_users %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>ID</th>
+                                    <th>Added</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_users %}
+                                <tr>
+                                    <td>
+                                        <i class="bi bi-person-circle me-2"></i>
+                                        {{ user.get_display_name }}
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if user.is_admin %}bg-danger
+                                            {% elif user.is_faculty %}bg-warning
+                                            {% else %}bg-success{% endif %}">
+                                            {{ user.role }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if user.is_student %}
+                                            {{ user.student_id }}
+                                        {% else %}
+                                            {{ user.employee_id }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.created_at|timesince }} ago</td>
+                                    <td>
+                                        {% if user.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No recent users to display.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

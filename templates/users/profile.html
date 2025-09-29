@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - {{ user.get_display_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-person-circle me-2"></i>My Profile</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <p><strong>Name:</strong> {{ user.get_display_name }}</p>
+                        <p><strong>Username:</strong> {{ user.username }}</p>
+                        <p><strong>Email:</strong> {{ user.email }}</p>
+                        <p><strong>Role:</strong> 
+                            <span class="badge 
+                                {% if user.is_admin %}bg-danger
+                                {% elif user.is_faculty %}bg-warning
+                                {% else %}bg-success{% endif %}">
+                                {{ user.role }}
+                            </span>
+                        </p>
+                        <p><strong>Phone:</strong> {{ user.phone|default:"Not provided" }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        {% if user.is_student %}
+                            <p><strong>Student ID:</strong> {{ user.student_id }}</p>
+                        {% else %}
+                            <p><strong>Employee ID:</strong> {{ user.employee_id }}</p>
+                        {% endif %}
+                        <p><strong>Date of Birth:</strong> {{ user.date_of_birth|default:"Not provided" }}</p>
+                        <p><strong>Account Status:</strong> 
+                            {% if user.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Email Verified:</strong> 
+                            {% if user.is_email_verified %}
+                                <span class="badge bg-success">Verified</span>
+                            {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Member Since:</strong> {{ user.created_at|date:"M d, Y" }}</p>
+                    </div>
+                </div>
+                
+                {% if user.address %}
+                <hr>
+                <p><strong>Address:</strong></p>
+                <p class="text-muted">{{ user.address }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" disabled>
+                        <i class="bi bi-pencil me-2"></i>Edit Profile
+                    </button>
+                    <button class="btn btn-outline-secondary" disabled>
+                        <i class="bi bi-key me-2"></i>Change Password
+                    </button>
+                    <button class="btn btn-outline-info" disabled>
+                        <i class="bi bi-upload me-2"></i>Upload Photo
+                    </button>
+                </div>
+                <hr>
+                <small class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Profile editing features coming soon!
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
