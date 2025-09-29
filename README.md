@@ -128,5 +128,5 @@ Cloud deployment is in progress; instructions will be updated once ready.
 ## Contact
 
 * **Team:** Data Weavers
-* **Email:** [chaitanythakar851@gmail.com](mailto:chaitanythakar851@gmail.com)
+* **Email:** [chaitanythakar851@gmail.com](mailto:chaitanythakar851@gmail.com) | [trivedimaharshim@gmail.com] (mailto:trivedimaharshim@gmail.com)
 * **Demo:** [https://mini-erp-web.onrender.com](https://mini-erp-web.onrender.com) [deployment in progress]
